@@ -3,17 +3,28 @@ AppName=Optimizer-Test
 AppVersion=1.0.0
 DefaultDirName={autopf}\Optimizer-Test
 DefaultGroupName=Optimizer-Test
-OutputDir=./setup_output
-OutputBaseFilename=Optimizer-Installer
+UninstallDisplayIcon={app}\Optimizer-Test.exe
 Compression=lzma
 SolidCompression=yes
+OutputDir=setup_output
+OutputBaseFilename=Optimizer-Setup
+; --- ICON SETTINGS ---
+; If you have an icon file, uncomment the line below and point to it
+; SetupIconFile=icon.ico 
+
+[Tasks]
+Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-; This includes your main EXE and the Guna DLL
-Source: "publish\Optimizer-Test.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "publish\Guna.UI2.dll"; DestDir: "{app}"; Flags: ignoreversion
-; Add any other DLLs here if needed
+; The * captures the EXE, the Guna DLL, and everything else in the publish folder
+Source: "publish\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
+; Start Menu Shortcut
 Name: "{group}\Optimizer-Test"; Filename: "{app}\Optimizer-Test.exe"
-Name: "{commondesktop}\Optimizer-Test"; Filename: "{app}\Optimizer-Test.exe"
+; Desktop Shortcut
+Name: "{autodesktop}\Optimizer-Test"; Filename: "{app}\Optimizer-Test.exe"; Tasks: desktopicon
+
+[Run]
+; Option to launch the app after installation
+Filename: "{app}\Optimizer-Test.exe"; Description: "{cm:LaunchProgram,Optimizer-Test}"; Flags: nowait postinstall skipifsilent
