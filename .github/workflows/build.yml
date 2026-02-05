@@ -13,27 +13,25 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v4
 
-    - name: Verify Files
-      run: dir  # This lists files in the log so we can debug if it fails
-
     - name: Setup MSBuild
       uses: microsoft/setup-msbuild@v2
 
     - name: Setup NuGet
       uses: NuGet/setup-nuget@v1
 
-    - name: Restore NuGet Packages
-      run: nuget restore "Optimizer-Test.csproj"
-
     - name: Build Executable
+      shell: pwsh
       run: |
-        msbuild "Optimizer-Test.csproj" `
-          /p:Configuration=Release `
-          /p:Platform="Any CPU" `
-          /p:OutputPath=./publish/
+        # This finds any .csproj file regardless of the folder
+        $projectFile = Get-ChildItem -Recurse -Filter "*.csproj" | Select-Object -First 1 -ExpandProperty FullName
+        Write-Host "Found project file: $projectFile"
+        
+        # Restore and Build using the found path
+        nuget restore "$projectFile"
+        msbuild "$projectFile" /p:Configuration=Release /p:Platform="Any CPU" /p:OutputPath="${{ github.workspace }}\publish\"
 
     - name: Upload Executable
       uses: actions/upload-artifact@v4
       with:
         name: Optimizer-Build
-        path: ./publish/
+        path: publish/
