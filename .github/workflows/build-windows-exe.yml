@@ -1,23 +1,19 @@
 name: Build & Release Optimizer Installer
 
-# THIS ENABLES THE RUN WORKFLOW BUTTON
+# ONLY manual run
 on:
-  workflow_dispatch:       # Manual Run
-  push:
-    branches:
-      - main
-      - master
+  workflow_dispatch:
 
 jobs:
   build-and-release:
     runs-on: windows-latest
 
     steps:
-      # 1) Checkout the repo
+      # 1) Checkout repo
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2) Setup MSBuild for .NET Framework
+      # 2) Setup MSBuild
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
 
@@ -29,7 +25,7 @@ jobs:
       - name: Restore packages
         run: nuget restore Optimizer.slnx
 
-      # 5) Build the EXE in Release mode
+      # 5) Build the EXE in Release
       - name: Build Release EXE
         run: msbuild Optimizer.slnx /p:Configuration=Release /p:Platform="Any CPU"
 
@@ -39,7 +35,7 @@ jobs:
         run: |
           Copy-Item -Path "Optimizer\packages\Guna.UI2.dll" -Destination "Optimizer\bin\Release" -Force
 
-      # 7) Install Inno Setup silently
+      # 7) Install Inno Setup
       - name: Install Inno Setup
         shell: pwsh
         run: |
@@ -51,27 +47,22 @@ jobs:
         shell: pwsh
         run: |
           $InnoPath = "C:\InnoSetup\ISCC.exe"
-          $ScriptPath = "InstallerScript.iss"  # Your Inno Setup script must exist in repo
+          $ScriptPath = "InstallerScript.iss"  # Your Inno Setup script in repo
           & $InnoPath $ScriptPath
 
-      # 9) Auto-create a tag if none exists
-      - name: Create auto tag
+      # 9) Create a tag manually (example: v1.0.0)
+      - name: Create tag
         id: tag
         shell: pwsh
         run: |
-          $existingTags = git tag
-          if ($existingTags -eq "") {
-            $TAG_NAME = "v1.0.0"
-          } else {
-            $TAG_NAME = "v1.0.$($existingTags.Count + 1)"
-          }
+          $TAG_NAME = "v1.0.0"  # You can edit this before running
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
           git tag $TAG_NAME
           git push origin $TAG_NAME
           Write-Output "tag=$TAG_NAME" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8
 
-      # 10) Create GitHub Release and attach the installer
+      # 10) Create GitHub Release manually
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
