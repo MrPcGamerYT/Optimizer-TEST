@@ -2,21 +2,20 @@ name: Build and Release Installer
 
 on:
   push:
-    tags:
-      - 'v*' # Trigger only when you push a tag like v1.0.0
-  workflow_dispatch: # Allows manual run
+    branches: [ "main", "master" ]
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: windows-latest
     permissions:
-      contents: write # Needed to create releases
+      contents: write
 
     steps:
     - name: Checkout Code
       uses: actions/checkout@v4
 
-    - name: Setup MSBuild
+    - name: Setup MSBuild & NuGet
       uses: microsoft/setup-msbuild@v2
 
     - name: Setup NuGet
@@ -27,16 +26,21 @@ jobs:
       run: |
         $projectFile = Get-ChildItem -Recurse -Filter "*.csproj" | Select-Object -First 1 -ExpandProperty FullName
         nuget restore "$projectFile"
+        # We output to \publish\ so the installer knows where to grab files
         msbuild "$projectFile" /p:Configuration=Release /p:Platform="Any CPU" /p:OutputPath="${{ github.workspace }}\publish\"
 
-    - name: Compile Installer (Inno Setup)
+    - name: Build Installer (Inno Setup)
       uses: Minionguyjpro/Inno-Setup-Action@v1.2.2
       with:
         path: installer.iss
 
-    - name: Create Release
+    - name: Create Release and Upload
       uses: softprops/action-gh-release@v2
       with:
-        files: setup_output/Optimizer-Installer.exe
+        tag_name: v${{ github.run_number }}
+        name: Release v${{ github.run_number }}
+        draft: false
+        prerelease: false
+        files: setup_output/Optimizer-Setup.exe
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
