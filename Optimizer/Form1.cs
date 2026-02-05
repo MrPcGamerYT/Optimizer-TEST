@@ -1,4 +1,4 @@
-﻿using Guna.UI2.WinForms;
+using Guna.UI2.WinForms;
 using Microsoft.Win32;
 using System;
 using System.Diagnostics;
@@ -296,7 +296,7 @@ namespace Optimizer
             InitTray();
             tip = new ToolTip();
             systemDrive = new DriveInfo(Path.GetPathRoot(Environment.SystemDirectory));
-
+            Updater.CheckAndUpdate();
             lblDriveCTitle.Text = $"{systemDrive.VolumeLabel} ({systemDrive.Name.TrimEnd('\\')})";
 
             // Main Data Fetch Timer (1 second)
@@ -1379,6 +1379,11 @@ namespace Optimizer
                 FileName = "https://discord.gg/XbqcMzwfQQ",
                 UseShellExecute = true
             });
+        }
+
+        private void Optimizer_Load(object sender, EventArgs e)
+        {
+
         }
     }
 }
