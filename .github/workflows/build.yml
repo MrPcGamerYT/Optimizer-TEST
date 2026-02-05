@@ -1,13 +1,16 @@
-name: Build Optimizer EXE
+name: Build and Release Installer
 
 on:
   push:
-    branches: [ "main", "master" ]
-  workflow_dispatch:
+    tags:
+      - 'v*' # Trigger only when you push a tag like v1.0.0
+  workflow_dispatch: # Allows manual run
 
 jobs:
   build:
     runs-on: windows-latest
+    permissions:
+      contents: write # Needed to create releases
 
     steps:
     - name: Checkout Code
@@ -19,19 +22,21 @@ jobs:
     - name: Setup NuGet
       uses: NuGet/setup-nuget@v1
 
-    - name: Build Executable
+    - name: Build Project
       shell: pwsh
       run: |
-        # This finds any .csproj file regardless of the folder
         $projectFile = Get-ChildItem -Recurse -Filter "*.csproj" | Select-Object -First 1 -ExpandProperty FullName
-        Write-Host "Found project file: $projectFile"
-        
-        # Restore and Build using the found path
         nuget restore "$projectFile"
         msbuild "$projectFile" /p:Configuration=Release /p:Platform="Any CPU" /p:OutputPath="${{ github.workspace }}\publish\"
 
-    - name: Upload Executable
-      uses: actions/upload-artifact@v4
+    - name: Compile Installer (Inno Setup)
+      uses: Minionguyjpro/Inno-Setup-Action@v1.2.2
       with:
-        name: Optimizer-Build
-        path: publish/
+        path: installer.iss
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v2
+      with:
+        files: setup_output/Optimizer-Installer.exe
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
