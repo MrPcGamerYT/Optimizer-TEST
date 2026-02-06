@@ -37,8 +37,8 @@ jobs:
     - name: Create or Update Release v1
       uses: softprops/action-gh-release@v2
       with:
-        tag_name: v1
-        name: Release v1
+        tag_name: v1.0
+        name: Release v1.0
         draft: false
         prerelease: false
         files: setup_output/Optimizer-v1-Setup.exe
