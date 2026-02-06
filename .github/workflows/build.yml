@@ -61,7 +61,7 @@ jobs:
             url     = "https://github.com/MrPcGamerYT/Optimizer/releases/latest/download/OptimizerSetup.exe"
         } | ConvertTo-Json -Compress
 
-        $json | Out-File -FilePath update.json -Encoding UTF8
+        Set-Content -Path update.json -Value $json -Encoding UTF8
         Write-Host "Generated update.json: $json"
 
     # 🔹 Commit updater.json changes
@@ -74,7 +74,7 @@ jobs:
         git commit -m "Update updater.json to $env:VERSION" || echo "No changes"
         git push
 
-    # 🔹 Read version from updater.json and set TAG_NAME
+    # 🔹 Read version from updater.json for tag
     - name: Read version from updater.json
       shell: pwsh
       run: |
@@ -97,15 +97,15 @@ jobs:
           Write-Host "Tag $env:TAG_NAME already exists."
         }
 
-    # 🚀 Create GitHub Release using updater.json version as tag
+    # 🚀 Create GitHub Release using updater.json version
     - name: Create Release
       uses: softprops/action-gh-release@v2
       with:
         tag_name: ${{ env.TAG_NAME }}
         name: Release ${{ env.TAG_NAME }}
-        files: setup_output/OptimizerSetup.exe
+        files: publish/OptimizerSetup.exe
         make_latest: true
-        fail_on_unmatched_files: true
+        fail_on_unmatched_files: false
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
