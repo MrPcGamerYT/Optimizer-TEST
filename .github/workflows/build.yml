@@ -55,19 +55,18 @@ jobs:
         $issFile = "installer.iss"
         $content = Get-Content $issFile
 
-        # Ensure AppVersion exists
-        if ($content -notmatch '^AppVersion=.*') {
-            $index = ($content | Select-String -Pattern '^\[Setup\]').LineNumber
-            $content = $content[0..($index-1)] + "AppVersion=$env:VERSION" + $content[$index..($content.Length-1)]
+        # Replace AppVersion (must exist)
+        if ($content -match '^AppVersion=.*') {
+            $content = $content -replace '^AppVersion=.*', "AppVersion=$env:VERSION"
         } else {
-            $content = $content -replace 'AppVersion=.*', "AppVersion=$env:VERSION"
+            throw "AppVersion line not found in installer.iss!"
         }
 
-        # Ensure VersionInfoVersion exists
-        if ($content -notmatch '^VersionInfoVersion=.*') {
-            $content += "`nVersionInfoVersion=$env:VERSION"
+        # Replace or add VersionInfoVersion
+        if ($content -match '^VersionInfoVersion=.*') {
+            $content = $content -replace '^VersionInfoVersion=.*', "VersionInfoVersion=$env:VERSION"
         } else {
-            $content = $content -replace 'VersionInfoVersion=.*', "VersionInfoVersion=$env:VERSION"
+            $content += "`nVersionInfoVersion=$env:VERSION"
         }
 
         $content | Set-Content $issFile -Encoding UTF8
