@@ -13,7 +13,7 @@ class Updater
         try
         {
             WebClient wc = new WebClient();
-            string versionInfo = wc.DownloadString("https://raw.githubusercontent.com/MrPcGamerYT/Optimizer/refs/heads/main/version.txt");
+            string versionInfo = wc.DownloadString("https://raw.githubusercontent.com/MrPcGamerYT/Optimizer/refs/heads/main/update.json");
             string[] lines = versionInfo.Split(new string[] { "\n" }, StringSplitOptions.RemoveEmptyEntries);
             string latestVersion = lines[0].Trim();
             string downloadUrl = lines[1].Trim();
