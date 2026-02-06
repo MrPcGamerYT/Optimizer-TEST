@@ -44,8 +44,8 @@ jobs:
       run: |
         Get-ChildItem -Recurse -Filter OptimizerSetup.exe
 
-    # 🧠 Generate updater.json & VERSION
-    - name: Generate updater.json
+    # 🧠 Generate VERSION and updater.json
+    - name: Generate VERSION and updater.json
       shell: pwsh
       run: |
         $runNumber = [int]$env:GITHUB_RUN_NUMBER
@@ -54,7 +54,6 @@ jobs:
         $build = [math]::Floor(($runNumber / 100) % 100)
         $revision = $runNumber % 100
         $version = "$major.$minor.$build.$revision"
-
         Write-Host "VERSION=$version" >> $env:GITHUB_ENV
 
         $json = @{
@@ -75,7 +74,14 @@ jobs:
         git commit -m "Update update.json to $env:VERSION" || echo "No changes"
         git push
 
-    # 🚀 Create Release (use exact version)
+    # 🔹 Create Git tag
+    - name: Create Git Tag
+      shell: pwsh
+      run: |
+        git tag $env:VERSION
+        git push origin $env:VERSION
+
+    # 🚀 Create Release
     - name: Create Release
       uses: softprops/action-gh-release@v2
       with:
