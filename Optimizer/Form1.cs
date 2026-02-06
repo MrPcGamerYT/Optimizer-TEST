@@ -80,31 +80,80 @@ namespace Optimizer
         private string currentGame = null;
 
         // Known PC game executables
-        private readonly string[] gameExecutables =
-        {
-    "csgo",
-    "valorant",
-    "fortnite",
-    "gta5",
-    "gta_sa",
-    "gtaiv",
-    "rdr2",
-    "eldenring",
-    "cyberpunk2077",
-    "minecraft",
-    "forzahorizon5",
-    "callofduty",
-    "mw2",
-    "mw3",
-    "bf2042",
-    "bfv",
-    "bf1",
-    "apex",
-    "pubg",
-    "dota2",
-    "leagueoflegends",
-    "overwatch"
+        private readonly string[] gameExecutables = 
+{
+    // FPS / Shooters
+    "csgo","cs2","valorant","fortnite","apex","pubg","pubg_lite",
+    "overwatch","overwatch2","bf1","bfv","bf2042","bf4","bf3",
+    "cod","codmw","codmw2","codmw3","codbo","codbo2","codbo3",
+    "codwarzone","halo","halomcc","rainbowsix","r6siege",
+    "quakechampions","doom","doom_eternal","insurgency",
+    "insurgencysandstorm","paladins","splitgate","cs1.6","cs1.5",
+    "quake3","teamfortress2","warface","crossfire","pointblank",
+    "payday2","borderlands3","borderlands2","borderlands","bioshockinfinite",
+    "bioshock2","bioshock","wolfenstein2","wolfensteintheoldblood",
+    "wolfensteinneworder","titanfall2","planetside2","battlefieldonline",
+    "bulletstorm","serioussam","suddenattack","specialforces","combatarms",
+    "freespace2","quake1","quake2","quake4","unrealtournament","teamfortressclassic",
+    "redorchestra2","redorchestra","verdun","hellletloose","risingstorm2",
+    "risingstorm","callofdutymodernwarfare","callofduty4","callofduty2",
+    "callofduty3","callofdutymw","callofdutymw2","callofdutymw3",
+    "callofdutyblackops","callofdutyblackops2","callofdutyblackops3",
+    "counterstrikeonline","counterstrikeonline2","doom64","duke3d",
+    
+    // Open World / RPG
+    "gta5","gta_sa","gtaiv","gtav","rdr2","eldenring","cyberpunk2077",
+    "witcher3","skyrim","fallout4","fallout76","starfield",
+    "assassinscreed","acvalhalla","acodyssey","acorigins",
+    "farcry3","farcry4","farcry5","farcry6","watchdogs",
+    "watchdogs2","watchdogslegion","hogwartslegacy","dyinglight",
+    "dyinglight2","mountandblade","mountandblade2","dragonageinquisition",
+    "dragonageorigins","mass_effect","masseffect2","masseffect3",
+    "dragonage2","divinity2","divinityoriginalsin2","pillars_of_eternity",
+    "baldursgate3","baldursgate2","torment","tormenttidesofnumenera",
+    "outerworlds","starwarsknights","falloutnewvegas","fallout3",
+    "cyberpunk2077","witcher2","assassinscreedunity","assassinscreed3",
+    "dishonored","dishonored2","prey","tombraider","shadowofthetombraider",
+    "rage2","rage","metroexodus","metro2033","metrolastlight",
+    "control","deathstranding","hitman3","hitman2","hitman","shadowofmordor",
+    "shadowofwar","witcher2","mass_effect_andromeda","talesofarise",
+    "nierreplicant","nierautomata","kingdomhearts3","kingdomhearts2",
+    
+    // Sandbox / Survival
+    "minecraft","minecraftlauncher","terraria","valheim","rust","ark",
+    "arkse","dayz","subnautica","subnautica_zeros","raft","theforest",
+    "sonsforest","dontstarve","greenhell","7daystodie","arksurvival",
+    "grounded","eco","noita","starbound","factorio","rimworld",
+    "oxygen_not_included","satisfactory","astroneer","astroneeralpha",
+    "empyrion","stationeers","thelongdark","conanexiles","conanexilesse",
+    "projectzomboid","scum","strandeddeep","subsistence","theisland",
+    "strandeddeep","theisland","survivalcraft","thehuntercallofthewild",
+    
+    // Racing / Sports
+    "forzahorizon4","forzahorizon5","forzamotorsport","nfs","nfsheat",
+    "nfsunbound","nfsmostwanted","assetto_corsa","assettocorsa_competizione",
+    "f1_22","f1_23","dirt5","crew2","rocketleague","easportsfc","fifa23",
+    "fifa22","pes2021","nba2k23","nba2k22","mlbtheshow22","tonyhawkproskater1",
+    "tonyhawkproskater2","tonyhawkproskater3","tonyhawkproskater4","speedrunners",
+    "trackmania","motogp22","wrc10","projectcars2","projectcars3","forza4",
+    
+    // Strategy / MOBA
+    "dota2","leagueoflegends","lol","smite","heroesofthestorm",
+    "starcraft2","warcraft3","ageofempires2","ageofempires4",
+    "civilization6","totalwar","totalwarwarhammer","xcom2",
+    "hearthstone","magicarenabattlegrounds","ironharvest","anno1800",
+    "companyofheroes2","commandandconquer3","commandandconquer4",
+    "supremecommander","warhammer40kdoa","ageofmythology",
+    
+    // Indie / Other
+    "amongus","fallguys","cuphead","hades","deadcells","undertale",
+    "stardewvalley","limbo","inside","celeste","slaythespire",
+    "factorio","oxygen_not_included","roguelegacy","hyperlightdrifter",
+    "bastion","transistor","hollowknight","bindingofisaac",
+    "deadbydaylight","hotlinemiami","hotlinemiami2","katana_zero",
+    "entertheshinobi","celeste","undertale","limbo","inside"
 };
+
 
         private async void NormalGameModeLoop()
         {
