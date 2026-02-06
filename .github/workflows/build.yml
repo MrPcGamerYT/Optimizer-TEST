@@ -12,6 +12,7 @@ jobs:
       contents: write
 
     env:
+      # Calculate version parts from run_number
       MAJOR: 1
       MINOR: ${{ github.run_number / 10000 }}
       BUILD: ${{ (github.run_number / 100) % 100 }}
@@ -19,15 +20,15 @@ jobs:
       VERSION: ${{ env.MAJOR }}.${{ env.MINOR }}.${{ env.BUILD }}.${{ env.REVISION }}
 
     steps:
-    # 🔹 Checkout
+    # 🔹 Checkout code
     - name: Checkout Code
       uses: actions/checkout@v4
 
-    # 🔹 MSBuild
+    # 🔹 Setup MSBuild
     - name: Setup MSBuild
       uses: microsoft/setup-msbuild@v2
 
-    # 🔹 NuGet
+    # 🔹 Setup NuGet
     - name: Setup NuGet
       uses: NuGet/setup-nuget@v1
 
@@ -45,23 +46,23 @@ jobs:
       with:
         path: installer.iss
 
-    # 🔹 Debug installer
+    # 🔹 Debug installer output
     - name: Debug Installer Output
       shell: pwsh
       run: |
         Get-ChildItem -Recurse -Filter OptimizerSetup.exe
 
-    # 🧠 Generate updater.json
+        # 🧠 Generate updater.json
     - name: Generate updater.json
       shell: pwsh
       run: |
-        $json = @"
-{
-  `"version`": `"$env:VERSION`",
-  `"url`": `"https://github.com/MrPcGamerYT/Optimizer/releases/latest/download/OptimizerSetup.exe`"
-}
-"@
-        Set-Content update.json $json -Encoding UTF8
+        $json = @{
+            version = $env:VERSION
+            url     = "https://github.com/MrPcGamerYT/Optimizer/releases/latest/download/OptimizerSetup.exe"
+        } | ConvertTo-Json -Compress
+
+        # Write to update.json
+        $json | Set-Content -Path update.json -Encoding UTF8
 
     # 🔹 Commit updater.json changes
     - name: Commit updater.json
@@ -85,15 +86,18 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    # 🧹 Delete Old Releases (Keep latest)
+    # 🧹 Delete old releases (keep latest)
     - name: Delete old releases
       shell: pwsh
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        $tags = gh release list --json tagName,createdAt `
-          --jq 'sort_by(.createdAt) | reverse | .[1:] | .[].tagName'
-        foreach ($tag in $tags) {
-          Write-Host "Deleting $tag"
-          gh release delete $tag -y --cleanup-tag
+        $tags = gh release list --json tagName,createdAt --jq 'sort_by(.createdAt) | reverse | .[1:] | .[].tagName'
+        if ($tags) {
+          foreach ($tag in $tags) {
+            Write-Host "Deleting release: $tag"
+            gh release delete $tag -y --cleanup-tag
+          }
+        } else {
+          Write-Host "No old releases to delete."
         }
