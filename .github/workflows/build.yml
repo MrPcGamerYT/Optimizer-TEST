@@ -87,7 +87,13 @@ jobs:
         } else {
           Write-Host "Tag $env:VERSION already exists."
         }
+    - name: Set TAG_NAME env
+      shell: pwsh
+      run: |
+       Write-Host "TAG_NAME=$env:VERSION" >> $env:GITHUB_ENV
 
+
+    
     # 🚀 Create Release (exact tag)
     - name: Create Release
       uses: softprops/action-gh-release@v2
