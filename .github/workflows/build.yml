@@ -15,7 +15,7 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v4
 
-    - name: Setup MSBuild
+    - name: Setup MSBuild & NuGet
       uses: microsoft/setup-msbuild@v2
 
     - name: Setup NuGet
@@ -24,42 +24,37 @@ jobs:
     - name: Build Project
       shell: pwsh
       run: |
-        $project = Get-ChildItem -Recurse -Filter "*.csproj" | Select-Object -First 1
-        nuget restore $project.FullName
-        msbuild $project.FullName /p:Configuration=Release
+        $projectFile = Get-ChildItem -Recurse -Filter "*.csproj" | Select-Object -First 1 -ExpandProperty FullName
+        nuget restore "$projectFile"
+        msbuild "$projectFile" /p:Configuration=Release /p:Platform="Any CPU" /p:OutputPath="${{ github.workspace }}\publish\"
 
     - name: Build Installer (Inno Setup)
       uses: Minionguyjpro/Inno-Setup-Action@v1.2.2
       with:
         path: installer.iss
 
-    # 🔄 UPDATE update.json
-    - name: Update update.json
+    # 🔥 DELETE ALL OLD RELEASES & TAGS
+    - name: Delete previous releases
       shell: pwsh
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        $version = "1.0.0.${{ github.run_number }}"
-        $url = "https://github.com/${{ github.repository }}/releases/download/v$version/OptimizerSetup.exe"
+        gh release list --limit 100 | ForEach-Object {
+          $tag = ($_ -split "`t")[0]
+          gh release delete $tag -y
+          git push origin :refs/tags/$tag
+        }
 
-        $json = @{
-          version = $version
-          url     = $url
-        } | ConvertTo-Json -Depth 3
-
-        Set-Content update.json $json -Encoding UTF8
-
-    - name: Commit update.json
-      uses: stefanzweifel/git-auto-commit-action@v5
-      with:
-        commit_message: "Update version to v1.0.0.${{ github.run_number }}"
-        file_pattern: update.json
-
-    # 🚀 CREATE RELEASE (DO NOT DELETE OLD ONES)
+    # 🚀 CREATE NEW LATEST RELEASE
     - name: Create Release
       uses: softprops/action-gh-release@v2
       with:
         tag_name: v1.0.0.${{ github.run_number }}
         name: Release v1.0.0.${{ github.run_number }}
+        draft: false
+        prerelease: false
         files: setup_output/OptimizerSetup.exe
         make_latest: true
+        fail_on_unmatched_files: false
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
