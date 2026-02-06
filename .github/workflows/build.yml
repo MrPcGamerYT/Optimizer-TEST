@@ -32,7 +32,7 @@ jobs:
         nuget restore "$projectFile"
         msbuild "$projectFile" /p:Configuration=Release /p:Platform="Any CPU" /p:OutputPath="${{ github.workspace }}\publish\"
 
-    # 🔹 Build Installer (Inno Setup)
+    # 🔹 Build Installer
     - name: Build Installer
       uses: Minionguyjpro/Inno-Setup-Action@v1.2.2
       with:
@@ -44,27 +44,27 @@ jobs:
       run: |
         Get-ChildItem -Recurse -Filter OptimizerSetup.exe
 
-    # 🧠 Generate updater.json & VERSION
+    # 🔹 MANUAL VERSION
+    - name: Set Manual Version
+      shell: pwsh
+      run: |
+        $version = "1.0.1.2"   # <-- Put your version here manually
+        Write-Host "VERSION=$version" >> $env:GITHUB_ENV
+        Write-Host "Using version $version for update.json and tag"
+
+    # 🔹 Generate updater.json
     - name: Generate updater.json
       shell: pwsh
       run: |
-        $runNumber = [int]$env:GITHUB_RUN_NUMBER
-        $major = 1
-        $minor = [math]::Floor($runNumber / 10000)
-        $build = [math]::Floor(($runNumber / 100) % 100)
-        $revision = $runNumber % 100
-        $version = "$major.$minor.$build.$revision"
-        Write-Host "VERSION=$version" >> $env:GITHUB_ENV
-
         $json = @{
-            version = $version
+            version = $env:VERSION
             url     = "https://github.com/MrPcGamerYT/Optimizer/releases/latest/download/OptimizerSetup.exe"
         } | ConvertTo-Json -Compress
 
-        Set-Content -Path update.json -Value $json -Encoding UTF8
+        $json | Out-File -FilePath update.json -Encoding UTF8
         Write-Host "Generated update.json: $json"
 
-    # 🔹 Commit updater.json changes
+    # 🔹 Commit updater.json
     - name: Commit updater.json
       shell: pwsh
       run: |
@@ -74,38 +74,29 @@ jobs:
         git commit -m "Update updater.json to $env:VERSION" || echo "No changes"
         git push
 
-    # 🔹 Read version from updater.json for tag
-    - name: Read version from updater.json
-      shell: pwsh
-      run: |
-        $json = Get-Content update.json | ConvertFrom-Json
-        $version = $json.version
-        Write-Host "TAG_NAME=$version" >> $env:GITHUB_ENV
-        Write-Host "Using version from updater.json as tag: $version"
-
-    # 🔹 Create Git tag based on updater.json version
+    # 🔹 Create Git Tag using manual version
     - name: Create Git Tag
       shell: pwsh
       run: |
         git config user.name "github-actions"
         git config user.email "github-actions@github.com"
-        if (-not (git tag -l $env:TAG_NAME)) {
-          git tag $env:TAG_NAME
-          git push origin $env:TAG_NAME
-          Write-Host "Tag $env:TAG_NAME created and pushed."
+        if (-not (git tag -l $env:VERSION)) {
+          git tag $env:VERSION
+          git push origin $env:VERSION
+          Write-Host "Tag $env:VERSION created and pushed."
         } else {
-          Write-Host "Tag $env:TAG_NAME already exists."
+          Write-Host "Tag $env:VERSION already exists."
         }
 
-    # 🚀 Create GitHub Release using updater.json version
+    # 🚀 Create Release using same manual version as tag
     - name: Create Release
       uses: softprops/action-gh-release@v2
       with:
-        tag_name: ${{ env.TAG_NAME }}
-        name: Release ${{ env.TAG_NAME }}
-        files: publish/OptimizerSetup.exe
+        tag_name: ${{ env.VERSION }}
+        name: Release ${{ env.VERSION }}
+        files: setup_output/OptimizerSetup.exe
         make_latest: true
-        fail_on_unmatched_files: false
+        fail_on_unmatched_files: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
