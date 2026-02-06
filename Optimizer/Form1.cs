@@ -151,7 +151,7 @@ namespace Optimizer
     "factorio","oxygen_not_included","roguelegacy","hyperlightdrifter",
     "bastion","transistor","hollowknight","bindingofisaac",
     "deadbydaylight","hotlinemiami","hotlinemiami2","katana_zero",
-    "entertheshinobi","celeste","undertale","limbo","inside"
+    "entertheshinobi","celeste","undertale","limbo","inside",
 
     // Chunk 2/5 – continued gameExecutables
     // MMO / Online
@@ -348,7 +348,7 @@ namespace Optimizer
     "residentEvil5","residentEvil6","residentEvil7","amnesia","soma","outlast",
     "outlast2","alienisolation","theevilwithin","theevilwithin2","layersoffear",
     "layersoffear2","blairwitch","littlehope","manofmedan","darkpicturesmanofmedan",
-    "darkpictureshouseofashes","darkpicturesthedevilinme","amnesiarebirth"
+    "darkpictureshouseofashes","darkpicturesthedevilinme","amnesiarebirth",
     
     // Total: ~200 games in this chunk
     // Chunk 5/5 – final gameExecutables
