@@ -44,7 +44,7 @@ jobs:
       with:
         tag_name: v1.0.0.${{ github.run_number }}
         name: Release v1.0.0.${{ github.run_number }}
-        files: setup_output/Optimizer-v1-Setup.exe
+        files: setup_output/OptimizerSetup.exe
         make_latest: true
         fail_on_unmatched_files: true
       env:
