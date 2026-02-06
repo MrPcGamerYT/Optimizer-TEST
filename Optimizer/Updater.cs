@@ -34,7 +34,7 @@ class Updater
                     {
                         string installerPath = Path.Combine(
                             Path.GetTempPath(),
-                            "Optimizer-Setup.exe"
+                            "OptimizerSetup.exe"
                         );
 
                         wc.DownloadFile(installerUrl, installerPath);
