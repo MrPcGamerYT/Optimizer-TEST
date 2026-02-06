@@ -24,49 +24,12 @@ jobs:
     - name: Setup NuGet
       uses: NuGet/setup-nuget@v1
 
-    # 🔹 Generate version number from GITHUB_RUN_NUMBER
-    - name: Generate Version
-      shell: pwsh
-      run: |
-        $runNumber = [int]$env:GITHUB_RUN_NUMBER
-        $major = 1
-        $minor = [math]::Floor($runNumber / 10000)
-        $build = [math]::Floor(($runNumber / 100) % 100)
-        $revision = $runNumber % 100
-        $version = "$major.$minor.$build.$revision"
-        Write-Host "VERSION=$version" >> $env:GITHUB_ENV
-        Write-Host "Generated version: $version"
-
-    # 🔹 Update csproj with new version
-    - name: Update Project Version
-      shell: pwsh
-      run: |
-        $projectFile = Get-ChildItem -Recurse -Filter "*.csproj" | Select-Object -First 1 -ExpandProperty FullName
-        $version = $env:VERSION
-
-        Write-Host "Updating project file: $projectFile to version $version"
-
-        $xml = [xml](Get-Content $projectFile)
-        $pg = $xml.Project.PropertyGroup | Select-Object -First 1
-
-        if ($pg.Version) { $pg.Version = $version } else { $pg.AppendChild($xml.CreateElement("Version")).InnerText = $version }
-        if ($pg.FileVersion) { $pg.FileVersion = $version } else { $pg.AppendChild($xml.CreateElement("FileVersion")).InnerText = $version }
-
-        $xml.Save($projectFile)
-        Write-Host "Project version updated."
-
-    # 🔹 Restore NuGet packages
-    - name: Restore NuGet
-      shell: pwsh
-      run: |
-        $projectFile = Get-ChildItem -Recurse -Filter "*.csproj" | Select-Object -First 1 -ExpandProperty FullName
-        nuget restore "$projectFile"
-
     # 🔹 Build Project
     - name: Build Project
       shell: pwsh
       run: |
         $projectFile = Get-ChildItem -Recurse -Filter "*.csproj" | Select-Object -First 1 -ExpandProperty FullName
+        nuget restore "$projectFile"
         msbuild "$projectFile" /p:Configuration=Release /p:Platform="Any CPU" /p:OutputPath="${{ github.workspace }}\publish\"
 
     # 🔹 Build Installer
@@ -75,15 +38,30 @@ jobs:
       with:
         path: installer.iss
 
-    # 🔹 Generate updater.json
+    # 🔹 Debug Installer Output
+    - name: Debug Installer Output
+      shell: pwsh
+      run: |
+        Get-ChildItem -Recurse -Filter OptimizerSetup.exe
+
+    # 🧠 Generate updater.json & VERSION
     - name: Generate updater.json
       shell: pwsh
       run: |
-        $version = $env:VERSION
+        $runNumber = [int]$env:GITHUB_RUN_NUMBER
+        $major = 1
+        $minor = [math]::Floor($runNumber / 10000)
+        $build = [math]::Floor(($runNumber / 100) % 100)
+        $revision = $runNumber % 100
+        $version = "$major.$minor.$build.$revision"
+
+        Write-Host "VERSION=$version" >> $env:GITHUB_ENV
+
         $json = @{
             version = $version
             url     = "https://github.com/MrPcGamerYT/Optimizer/releases/latest/download/OptimizerSetup.exe"
         } | ConvertTo-Json -Compress
+
         $json | Set-Content -Path update.json -Encoding UTF8
         Write-Host "Generated update.json: $json"
 
@@ -97,7 +75,7 @@ jobs:
         git commit -m "Update update.json to $env:VERSION" || echo "No changes"
         git push
 
-    # 🔹 Create Release
+    # 🚀 Create Release
     - name: Create Release
       uses: softprops/action-gh-release@v2
       with:
@@ -108,3 +86,19 @@ jobs:
         fail_on_unmatched_files: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    # 🧹 Delete old releases (keep latest)
+    - name: Delete old releases
+      shell: pwsh
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        $tags = gh release list --json tagName,createdAt --jq 'sort_by(.createdAt) | reverse | .[1:] | .[].tagName'
+        if ($tags) {
+          foreach ($tag in $tags) {
+            Write-Host "Deleting release: $tag"
+            gh release delete $tag -y --cleanup-tag
+          }
+        } else {
+          Write-Host "No old releases to delete."
+        }
