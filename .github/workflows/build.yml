@@ -24,6 +24,29 @@ jobs:
     - name: Setup NuGet
       uses: NuGet/setup-nuget@v1
 
+    # 🔹 Calculate Version
+    - name: Calculate Version
+      id: version
+      shell: pwsh
+      run: |
+        $runNumber = [int]$env:GITHUB_RUN_NUMBER
+        $major = 1
+        $minor = [math]::Floor($runNumber / 10000)
+        $build = [math]::Floor(($runNumber / 100) % 100)
+        $revision = $runNumber % 100
+        $version = "$major.$minor.$build.$revision"
+        Write-Host "VERSION=$version" >> $env:GITHUB_ENV
+        Write-Host "Calculated version: $version"
+
+    # 🔹 Update csproj with new version
+    - name: Update csproj Version
+      shell: pwsh
+      run: |
+        $projectFile = Get-ChildItem -Recurse -Filter "*.csproj" | Select-Object -First 1 -ExpandProperty FullName
+        (Get-Content $projectFile) -replace '<FileVersion>.*</FileVersion>', "<FileVersion>$env:VERSION</FileVersion>" `
+                                  -replace '<Version>.*</Version>', "<Version>$env:VERSION</Version>" | Set-Content $projectFile
+        Write-Host "Updated csproj to version $env:VERSION"
+
     # 🔹 Build Project
     - name: Build Project
       shell: pwsh
@@ -38,50 +61,40 @@ jobs:
       with:
         path: installer.iss
 
-    # 🔹 Debug Installer Output
+    # 🔹 Verify Installer Output
     - name: Debug Installer Output
       shell: pwsh
       run: |
         Get-ChildItem -Recurse -Filter OptimizerSetup.exe
 
-    # 🧠 Generate updater.json & VERSION
-    - name: Generate updater.json
+    # 🔹 Generate update.json
+    - name: Generate update.json
       shell: pwsh
       run: |
-        $runNumber = [int]$env:GITHUB_RUN_NUMBER
-        $major = 1
-        $minor = [math]::Floor($runNumber / 10000)
-        $build = [math]::Floor(($runNumber / 100) % 100)
-        $revision = $runNumber % 100
-        $version = "$major.$minor.$build.$revision"
-
-        Write-Host "VERSION=$version" >> $env:GITHUB_ENV
-
         $json = @{
-            version = $version
+            version = "$env:VERSION"
             url     = "https://github.com/MrPcGamerYT/Optimizer/releases/latest/download/OptimizerSetup.exe"
         } | ConvertTo-Json -Compress
-
         $json | Set-Content -Path update.json -Encoding UTF8
         Write-Host "Generated update.json: $json"
 
-    # 🔹 Commit updater.json changes
-    - name: Commit updater.json
+    # 🔹 Commit update.json
+    - name: Commit update.json
       shell: pwsh
       run: |
         git config user.name "github-actions"
         git config user.email "github-actions@github.com"
         git add update.json
-        git commit -m "Update update.json to $env:VERSION" || echo "No changes"
+        git commit -m "Auto update update.json to $env:VERSION" || echo "No changes to commit"
         git push
 
     # 🚀 Create Release
     - name: Create Release
       uses: softprops/action-gh-release@v2
       with:
-        tag_name: Optimizer
-        name: Release OptimizerSetup
-        files: setup_output/OptimizerSetup.exe
+        tag_name: "v${{ env.VERSION }}"      # <-- Use version as tag
+        name: "Release v${{ env.VERSION }}"
+        files: "publish/OptimizerSetup.exe"  # <-- Make sure path matches your installer output
         make_latest: true
         fail_on_unmatched_files: true
       env:
