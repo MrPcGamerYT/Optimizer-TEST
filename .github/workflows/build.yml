@@ -12,15 +12,19 @@ jobs:
       contents: write
 
     steps:
+    # 🔹 Checkout
     - name: Checkout Code
       uses: actions/checkout@v4
 
+    # 🔹 MSBuild
     - name: Setup MSBuild
       uses: microsoft/setup-msbuild@v2
 
+    # 🔹 NuGet
     - name: Setup NuGet
       uses: NuGet/setup-nuget@v1
 
+    # 🔹 Build Project
     - name: Build Project
       shell: pwsh
       run: |
@@ -28,12 +32,13 @@ jobs:
         nuget restore "$projectFile"
         msbuild "$projectFile" /p:Configuration=Release /p:Platform="Any CPU" /p:OutputPath="${{ github.workspace }}\publish\"
 
+    # 🔹 Build Installer (Inno Setup)
     - name: Build Installer
       uses: Minionguyjpro/Inno-Setup-Action@v1.2.2
       with:
         path: installer.iss
 
-    # 🚀 CREATE RELEASE FIRST
+    # 🚀 CREATE RELEASE (LATEST)
     - name: Create Release
       uses: softprops/action-gh-release@v2
       with:
@@ -41,40 +46,29 @@ jobs:
         name: Release v1.0.0.${{ github.run_number }}
         files: setup_output/OptimizerSetup.exe
         make_latest: true
+        draft: false
+        prerelease: false
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    # 📝 UPDATE update.json
-    - name: Update update.json
+    # 🔐 AUTHENTICATE GH CLI
+    - name: Authenticate gh
       shell: pwsh
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        $version = "1.0.0.${{ github.run_number }}"
-        $tag = "v$version"
-        $url = "https://github.com/${{ github.repository }}/releases/download/$tag/OptimizerSetup.exe"
+        gh auth setup-git
 
-        $json = @{
-          version = $version
-          tag     = $tag
-          url     = $url
-        } | ConvertTo-Json -Depth 3
-
-        Set-Content update.json $json -Encoding UTF8
-
-    # 💾 COMMIT update.json
-    - name: Commit update.json
-      uses: stefanzweifel/git-auto-commit-action@v5
-      with:
-        commit_message: "Update version to v1.0.0.${{ github.run_number }}"
-        file_pattern: update.json
-
-    # 🧹 DELETE OLD RELEASES (KEEP LATEST)
+    # 🧹 DELETE ALL OLD RELEASES (KEEP LATEST)
     - name: Delete old releases
       shell: pwsh
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        $releases = gh release list --limit 50 | Select-Object -Skip 1
-        foreach ($r in $releases) {
-          $tag = ($r -split "`t")[0]
+        $tags = gh release list --json tagName,createdAt `
+          --jq 'sort_by(.createdAt) | reverse | .[1:] | .[].tagName'
+
+        foreach ($tag in $tags) {
+          Write-Host "Deleting $tag"
           gh release delete $tag -y --cleanup-tag
         }
