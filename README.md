@@ -7,22 +7,22 @@ It is designed to improve system performance, clean junk files, boost games & em
 ## 📸 Screenshots
 
 ### 🏠 Home Panel
-![Home Panel]()
+![Home Panel](https://github.com/MrPcGamerYT/Optimizer/blob/main/screenshots/home.png)
 
 ### 🧹 Cleaner Panel
-![Cleaner Panel]()
+![Cleaner Panel](https://github.com/MrPcGamerYT/Optimizer/blob/main/screenshots/cleaner.png)
 
 ### 🚀 Booster Panel
-![Booster Panel]()
+![Booster Panel](https://github.com/MrPcGamerYT/Optimizer/blob/main/screenshots/booster.png)
 
 ### 🎮 Game & Emulator Boost
-![Game Mode Panel]()
+![Game Mode Panel](https://github.com/MrPcGamerYT/Optimizer/blob/main/screenshots/game-mode.png)
 
 ### ⚙️ Settings Panel
 ![Settings Panel](https://github.com/MrPcGamerYT/Optimizer/blob/main/screenshots/settings.png)
 
 ### ℹ️️ Information Panel
-![Information Panel]()
+![Information Panel](https://github.com/MrPcGamerYT/Optimizer/blob/main/screenshots/info.png)
 
 ---
 
