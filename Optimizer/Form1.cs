@@ -638,7 +638,7 @@ namespace Optimizer
 
         private void ShowPanel(Panel p)
         {
-            Honepnl.Visible = Cleanerpnl.Visible = boostpnl.Visible = gamemodpnl.Visible = settingspnl.Visible = infopnl.Visible = false;
+            Homepnl.Visible = Cleanerpnl.Visible = boostpnl.Visible = gamemodpnl.Visible = settingspnl.Visible = infopnl.Visible = false;
             p.Visible = true;
         }
 
@@ -658,7 +658,7 @@ namespace Optimizer
 
         enum RecycleFlags { SHERB_NOCONFIRMATION = 0x00000001, SHERB_NOPROGRESSUI = 0x00000002, SHERB_NOSOUND = 0x00000004 }
 
-        private void guna2Button1_Click(object s, EventArgs e) => ShowPanel(Honepnl);
+        private void guna2Button1_Click(object s, EventArgs e) => ShowPanel(Homepnl);
         private void guna2Button2_Click(object s, EventArgs e) => ShowPanel(boostpnl);
         private void guna2Button3_Click(object s, EventArgs e) => ShowPanel(Cleanerpnl);
         private void guna2Button4_Click(object s, EventArgs e) => ShowPanel(gamemodpnl);
