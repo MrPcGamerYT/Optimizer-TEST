@@ -109,13 +109,11 @@ namespace Optimizer
             this.btnRestoreDefaults = new Guna.UI2.WinForms.Guna2GradientTileButton();
             this.tgReduceAnimations = new Guna.UI2.WinForms.Guna2ToggleSwitch();
             this.tgMinimizeToTray = new Guna.UI2.WinForms.Guna2ToggleSwitch();
-            this.tgStartWithWindows = new Guna.UI2.WinForms.Guna2ToggleSwitch();
             this.lblAdminStatus = new System.Windows.Forms.Label();
             this.label13 = new System.Windows.Forms.Label();
             this.label12 = new System.Windows.Forms.Label();
             this.guna2Separator6 = new Guna.UI2.WinForms.Guna2Separator();
             this.label11 = new System.Windows.Forms.Label();
-            this.label9 = new System.Windows.Forms.Label();
             this.infopnl = new Guna.UI2.WinForms.Guna2Panel();
             this.lblAppName = new System.Windows.Forms.Label();
             this.lblVersion = new System.Windows.Forms.Label();
@@ -1365,13 +1363,11 @@ namespace Optimizer
             this.settingspnl.Controls.Add(this.btnRestoreDefaults);
             this.settingspnl.Controls.Add(this.tgReduceAnimations);
             this.settingspnl.Controls.Add(this.tgMinimizeToTray);
-            this.settingspnl.Controls.Add(this.tgStartWithWindows);
             this.settingspnl.Controls.Add(this.lblAdminStatus);
             this.settingspnl.Controls.Add(this.label13);
             this.settingspnl.Controls.Add(this.label12);
             this.settingspnl.Controls.Add(this.guna2Separator6);
             this.settingspnl.Controls.Add(this.label11);
-            this.settingspnl.Controls.Add(this.label9);
             this.settingspnl.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(31)))), ((int)(((byte)(33)))), ((int)(((byte)(42)))));
             this.settingspnl.Location = new System.Drawing.Point(70, 92);
             this.settingspnl.Name = "settingspnl";
@@ -1397,7 +1393,7 @@ namespace Optimizer
             this.btnRestoreDefaults.ForeColor = System.Drawing.Color.White;
             this.btnRestoreDefaults.GradientMode = System.Drawing.Drawing2D.LinearGradientMode.Vertical;
             this.btnRestoreDefaults.HoverState.BorderColor = System.Drawing.Color.White;
-            this.btnRestoreDefaults.Location = new System.Drawing.Point(427, 255);
+            this.btnRestoreDefaults.Location = new System.Drawing.Point(218, 83);
             this.btnRestoreDefaults.Name = "btnRestoreDefaults";
             this.btnRestoreDefaults.PressedColor = System.Drawing.Color.Transparent;
             this.btnRestoreDefaults.Size = new System.Drawing.Size(282, 34);
@@ -1412,7 +1408,7 @@ namespace Optimizer
             this.tgReduceAnimations.CheckedState.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(94)))), ((int)(((byte)(148)))), ((int)(((byte)(255)))));
             this.tgReduceAnimations.CheckedState.InnerBorderColor = System.Drawing.Color.White;
             this.tgReduceAnimations.CheckedState.InnerColor = System.Drawing.Color.White;
-            this.tgReduceAnimations.Location = new System.Drawing.Point(517, 171);
+            this.tgReduceAnimations.Location = new System.Drawing.Point(540, 183);
             this.tgReduceAnimations.Name = "tgReduceAnimations";
             this.tgReduceAnimations.Size = new System.Drawing.Size(35, 20);
             this.tgReduceAnimations.TabIndex = 24;
@@ -1429,7 +1425,7 @@ namespace Optimizer
             this.tgMinimizeToTray.CheckedState.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(94)))), ((int)(((byte)(148)))), ((int)(((byte)(255)))));
             this.tgMinimizeToTray.CheckedState.InnerBorderColor = System.Drawing.Color.White;
             this.tgMinimizeToTray.CheckedState.InnerColor = System.Drawing.Color.White;
-            this.tgMinimizeToTray.Location = new System.Drawing.Point(517, 123);
+            this.tgMinimizeToTray.Location = new System.Drawing.Point(540, 135);
             this.tgMinimizeToTray.Name = "tgMinimizeToTray";
             this.tgMinimizeToTray.Size = new System.Drawing.Size(35, 20);
             this.tgMinimizeToTray.TabIndex = 23;
@@ -1439,30 +1435,13 @@ namespace Optimizer
             this.tgMinimizeToTray.UncheckedState.InnerColor = System.Drawing.Color.White;
             this.tgMinimizeToTray.CheckedChanged += new System.EventHandler(this.tgMinimizeToTray_CheckedChanged);
             // 
-            // tgStartWithWindows
-            // 
-            this.tgStartWithWindows.BackColor = System.Drawing.Color.Transparent;
-            this.tgStartWithWindows.CheckedState.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(94)))), ((int)(((byte)(148)))), ((int)(((byte)(255)))));
-            this.tgStartWithWindows.CheckedState.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(94)))), ((int)(((byte)(148)))), ((int)(((byte)(255)))));
-            this.tgStartWithWindows.CheckedState.InnerBorderColor = System.Drawing.Color.White;
-            this.tgStartWithWindows.CheckedState.InnerColor = System.Drawing.Color.White;
-            this.tgStartWithWindows.Location = new System.Drawing.Point(517, 81);
-            this.tgStartWithWindows.Name = "tgStartWithWindows";
-            this.tgStartWithWindows.Size = new System.Drawing.Size(35, 20);
-            this.tgStartWithWindows.TabIndex = 22;
-            this.tgStartWithWindows.UncheckedState.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(125)))), ((int)(((byte)(137)))), ((int)(((byte)(149)))));
-            this.tgStartWithWindows.UncheckedState.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(125)))), ((int)(((byte)(137)))), ((int)(((byte)(149)))));
-            this.tgStartWithWindows.UncheckedState.InnerBorderColor = System.Drawing.Color.White;
-            this.tgStartWithWindows.UncheckedState.InnerColor = System.Drawing.Color.White;
-            this.tgStartWithWindows.CheckedChanged += new System.EventHandler(this.tgStartWithWindows_CheckedChanged);
-            // 
             // lblAdminStatus
             // 
             this.lblAdminStatus.AutoEllipsis = true;
             this.lblAdminStatus.BackColor = System.Drawing.Color.Transparent;
             this.lblAdminStatus.Font = new System.Drawing.Font("Orbitron", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblAdminStatus.ForeColor = System.Drawing.Color.White;
-            this.lblAdminStatus.Location = new System.Drawing.Point(195, 207);
+            this.lblAdminStatus.Location = new System.Drawing.Point(195, 235);
             this.lblAdminStatus.Name = "lblAdminStatus";
             this.lblAdminStatus.Size = new System.Drawing.Size(329, 44);
             this.lblAdminStatus.TabIndex = 21;
@@ -1475,7 +1454,7 @@ namespace Optimizer
             this.label13.BackColor = System.Drawing.Color.Transparent;
             this.label13.Font = new System.Drawing.Font("Orbitron", 14.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label13.ForeColor = System.Drawing.Color.White;
-            this.label13.Location = new System.Drawing.Point(166, 171);
+            this.label13.Location = new System.Drawing.Point(143, 183);
             this.label13.Name = "label13";
             this.label13.Size = new System.Drawing.Size(317, 22);
             this.label13.TabIndex = 18;
@@ -1487,7 +1466,7 @@ namespace Optimizer
             this.label12.BackColor = System.Drawing.Color.Transparent;
             this.label12.Font = new System.Drawing.Font("Orbitron", 14.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label12.ForeColor = System.Drawing.Color.White;
-            this.label12.Location = new System.Drawing.Point(166, 125);
+            this.label12.Location = new System.Drawing.Point(143, 137);
             this.label12.Name = "label12";
             this.label12.Size = new System.Drawing.Size(281, 22);
             this.label12.TabIndex = 17;
@@ -1514,18 +1493,6 @@ namespace Optimizer
             this.label11.Size = new System.Drawing.Size(234, 45);
             this.label11.TabIndex = 15;
             this.label11.Text = "SETTINGS";
-            // 
-            // label9
-            // 
-            this.label9.AutoSize = true;
-            this.label9.BackColor = System.Drawing.Color.Transparent;
-            this.label9.Font = new System.Drawing.Font("Orbitron", 14.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label9.ForeColor = System.Drawing.Color.White;
-            this.label9.Location = new System.Drawing.Point(166, 78);
-            this.label9.Name = "label9";
-            this.label9.Size = new System.Drawing.Size(326, 22);
-            this.label9.TabIndex = 0;
-            this.label9.Text = "Optimizer Start With Windows";
             // 
             // infopnl
             // 
@@ -1820,10 +1787,10 @@ namespace Optimizer
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(26)))), ((int)(((byte)(26)))), ((int)(((byte)(34)))));
             this.ClientSize = new System.Drawing.Size(800, 403);
+            this.Controls.Add(this.settingspnl);
             this.Controls.Add(this.Homepnl);
             this.Controls.Add(this.boostpnl);
             this.Controls.Add(this.Cleanerpnl);
-            this.Controls.Add(this.settingspnl);
             this.Controls.Add(this.infopnl);
             this.Controls.Add(this.gamemodpnl);
             this.Controls.Add(this.guna2Panel1);
@@ -1950,10 +1917,8 @@ namespace Optimizer
         private System.Windows.Forms.Label lblPing;
         private Guna.UI2.WinForms.Guna2Separator guna2Separator6;
         private System.Windows.Forms.Label label11;
-        private System.Windows.Forms.Label label9;
         private Guna.UI2.WinForms.Guna2ToggleSwitch tgReduceAnimations;
         private Guna.UI2.WinForms.Guna2ToggleSwitch tgMinimizeToTray;
-        private Guna.UI2.WinForms.Guna2ToggleSwitch tgStartWithWindows;
         private System.Windows.Forms.Label lblAdminStatus;
         private System.Windows.Forms.Label label13;
         private System.Windows.Forms.Label label12;
