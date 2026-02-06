@@ -38,7 +38,7 @@ jobs:
       with:
         path: installer.iss
 
-    # 🔹 Debug Installer Output
+    # 🔹 Debug installer output
     - name: Debug Installer Output
       shell: pwsh
       run: |
@@ -57,11 +57,12 @@ jobs:
 
         Write-Host "VERSION=$version" >> $env:GITHUB_ENV
 
-        $json = @{
-            version = $version
-            url     = "https://github.com/MrPcGamerYT/Optimizer/releases/latest/download/OptimizerSetup.exe"
-        } | ConvertTo-Json -Compress
-
+        $json = @"
+        {
+          "version": "$version",
+          "url": "https://github.com/MrPcGamerYT/Optimizer/releases/latest/download/OptimizerSetup.exe"
+        }
+"@
         $json | Set-Content -Path update.json -Encoding UTF8
         Write-Host "Generated update.json: $json"
 
@@ -72,15 +73,15 @@ jobs:
         git config user.name "github-actions"
         git config user.email "github-actions@github.com"
         git add update.json
-        git commit -m "Update update.json to $env:VERSION" || echo "No changes"
+        git commit -m "Update update.json to v$env:VERSION" || echo "No changes"
         git push
 
-    # 🚀 Create Release
+    # 🚀 Create Release (exact version, no "v")
     - name: Create Release
       uses: softprops/action-gh-release@v2
       with:
-        tag_name: v${{ env.VERSION }}
-        name: Release v${{ env.VERSION }}
+        tag_name: ${{ env.VERSION }}
+        name: Release ${{ env.VERSION }}
         files: setup_output/OptimizerSetup.exe
         make_latest: true
         fail_on_unmatched_files: true
