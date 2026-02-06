@@ -113,6 +113,13 @@ It is designed to improve system performance, clean junk files, boost games & em
 
 ## 📜 License
 
-This project is **not open-source**.
-All rights are reserved by the developer.
+Copyright © 2026 MrPcGamerYT
+
+This project is NOT open-source.
+
+All rights are reserved.  
+You may not copy, modify, distribute, reverse-engineer, or use any part of this software without explicit written permission from the developer.
+
+Unauthorized use is strictly prohibited.
+
 
