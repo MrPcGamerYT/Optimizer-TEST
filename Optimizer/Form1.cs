@@ -643,6 +643,7 @@ namespace Optimizer
             this.MaximumSize = this.Size;
             this.MinimumSize = this.Size;
             lblVersion.Text = Application.ProductVersion; // ✅ SAFE HERE TOO
+            Updater.CheckAndUpdate();
 
         }
 
