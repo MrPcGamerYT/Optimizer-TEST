@@ -12,17 +12,9 @@ jobs:
       contents: write
 
     steps:
-    # 🔹 Checkout code
+    # 🔹 Checkout
     - name: Checkout Code
       uses: actions/checkout@v4
-
-    # 🔹 Setup MSBuild
-    - name: Setup MSBuild
-      uses: microsoft/setup-msbuild@v2
-
-    # 🔹 Setup NuGet
-    - name: Setup NuGet
-      uses: NuGet/setup-nuget@v1
 
     # 🔹 Build Project
     - name: Build Project
@@ -38,19 +30,12 @@ jobs:
       with:
         path: installer.iss
 
-    # 🔹 Debug Installer Output
-    - name: Debug Installer Output
-      shell: pwsh
-      run: |
-        Get-ChildItem -Recurse -Filter OptimizerSetup.exe
-
-    # 🔹 MANUAL VERSION
+    # 🔹 Manual version
     - name: Set Manual Version
       shell: pwsh
       run: |
-        $version = "1.0.1.2"   # <-- Put your version here manually
+        $version = "1.0.1.2"   # <-- Set your version manually here
         Write-Host "VERSION=$version" >> $env:GITHUB_ENV
-        Write-Host "Using version $version for update.json and tag"
 
     # 🔹 Generate updater.json
     - name: Generate updater.json
@@ -60,7 +45,6 @@ jobs:
             version = $env:VERSION
             url     = "https://github.com/MrPcGamerYT/Optimizer/releases/latest/download/OptimizerSetup.exe"
         } | ConvertTo-Json -Compress
-
         $json | Out-File -FilePath update.json -Encoding UTF8
         Write-Host "Generated update.json: $json"
 
@@ -74,7 +58,7 @@ jobs:
         git commit -m "Update updater.json to $env:VERSION" || echo "No changes"
         git push
 
-    # 🔹 Create Git Tag using manual version
+    # 🔹 Create Git tag
     - name: Create Git Tag
       shell: pwsh
       run: |
@@ -88,17 +72,17 @@ jobs:
           Write-Host "Tag $env:VERSION already exists."
         }
 
-    # 🚀 Create Release using same manual version as tag
-    - name: Create Release
-      uses: softprops/action-gh-release@v2
-      with:
-        tag_name: ${{ env.VERSION }}
-        name: Release ${{ env.VERSION }}
-        files: setup_output/OptimizerSetup.exe
-        make_latest: true
-        fail_on_unmatched_files: true
+    # 🚀 Create GitHub Release manually with gh CLI
+    - name: Create Release using gh CLI
+      shell: pwsh
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        gh auth setup-git
+        gh release create $env:VERSION publish/OptimizerSetup.exe `
+          --title "Release $env:VERSION" `
+          --notes "Release generated from workflow" `
+          --latest
 
     # 🧹 Delete old releases (keep latest)
     - name: Delete old releases
