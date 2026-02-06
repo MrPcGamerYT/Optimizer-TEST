@@ -53,7 +53,7 @@ jobs:
         name: Release v1.0.0.${{ github.run_number }}
         draft: false
         prerelease: false
-        files: setup_output/Optimizer-v1-Setup.exe
+        files: setup_output/OptimizerSetup.exe
         make_latest: true
         fail_on_unmatched_files: false
       env:
