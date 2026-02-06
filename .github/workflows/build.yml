@@ -11,14 +11,6 @@ jobs:
     permissions:
       contents: write
 
-    env:
-      # Calculate version parts from run_number
-      MAJOR: 1
-      MINOR: ${{ github.run_number / 10000 }}
-      BUILD: ${{ (github.run_number / 100) % 100 }}
-      REVISION: ${{ github.run_number % 100 }}
-      VERSION: ${{ env.MAJOR }}.${{ env.MINOR }}.${{ env.BUILD }}.${{ env.REVISION }}
-
     steps:
     # 🔹 Checkout code
     - name: Checkout Code
@@ -46,23 +38,32 @@ jobs:
       with:
         path: installer.iss
 
-    # 🔹 Debug installer output
+    # 🔹 Debug Installer Output
     - name: Debug Installer Output
       shell: pwsh
       run: |
         Get-ChildItem -Recurse -Filter OptimizerSetup.exe
 
-        # 🧠 Generate updater.json
+    # 🧠 Generate updater.json & VERSION
     - name: Generate updater.json
       shell: pwsh
       run: |
+        $runNumber = [int]$env:GITHUB_RUN_NUMBER
+        $major = 1
+        $minor = [math]::Floor($runNumber / 10000)
+        $build = [math]::Floor(($runNumber / 100) % 100)
+        $revision = $runNumber % 100
+        $version = "$major.$minor.$build.$revision"
+
+        Write-Host "VERSION=$version" >> $env:GITHUB_ENV
+
         $json = @{
-            version = $env:VERSION
+            version = $version
             url     = "https://github.com/MrPcGamerYT/Optimizer/releases/latest/download/OptimizerSetup.exe"
         } | ConvertTo-Json -Compress
 
-        # Write to update.json
         $json | Set-Content -Path update.json -Encoding UTF8
+        Write-Host "Generated update.json: $json"
 
     # 🔹 Commit updater.json changes
     - name: Commit updater.json
