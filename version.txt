@@ -1,2 +1,2 @@
-1.0.0.${{ github.run_number }}
-https://github.com/MrPcGamerYT/Optimizer/releases/download/v1.0.0.${{ github.run_number }}/Optimizer-v1-Setup.exe
+1.0.0.73
+https://github.com/MrPcGamerYT/Optimizer/releases/download/v1.0.0.73/Optimizer-v1-Setup.exe
