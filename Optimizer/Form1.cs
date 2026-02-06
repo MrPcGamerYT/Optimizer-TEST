@@ -18,6 +18,16 @@ namespace Optimizer
 {
     public partial class Optimizer : Form
     {
+
+        // Should we remember the last panel? (toggle ON/OFF)
+        private bool rememberLastPanel = true; // user can change this later
+
+        // Store the last visible panel's name
+        private string lastPanel = "homePnl"; // default panel at first start
+
+        // Storage alert tracking (add this)
+        private int lastAlertLevel = -1; // -1 = no alert shown yet
+
         private void SetAdminStatus(string text, Color color)
         {
             lblAdminStatus.Text = text;
@@ -269,14 +279,11 @@ namespace Optimizer
 
         private void LoadSavedSettings()
         {
-            suppressStartWithWindowsEvent = true;
             suppressMinimizeEvent = true;
 
-            tgStartWithWindows.Checked = Properties.Settings.Default.StartWithWindows;
             tgMinimizeToTray.Checked = Properties.Settings.Default.MinimizeToTray;
             tgReduceAnimations.Checked = Properties.Settings.Default.ReduceAnimations;
 
-            suppressStartWithWindowsEvent = false;
             suppressMinimizeEvent = false;
         }
 
@@ -298,30 +305,15 @@ namespace Optimizer
             systemDrive = new DriveInfo(Path.GetPathRoot(Environment.SystemDirectory));
             Updater.CheckAndUpdate();
             lblDriveCTitle.Text = $"{systemDrive.VolumeLabel} ({systemDrive.Name.TrimEnd('\\')})";
-
             // Main Data Fetch Timer (1 second)
             usageTimer.Interval = 1000;
             usageTimer.Tick += UsageTimer_Tick;
             usageTimer.Start();
-
             // High-Speed Animation Timer (16ms ~ 60 FPS)
             animationTimer = new Timer();
             animationTimer.Interval = 16;
             animationTimer.Tick += AnimationTimer_Tick;
             animationTimer.Start();
-            tgStartWithWindows.Enabled = IsRunningAsAdmin();
-            LoadStartWithWindowsState();
-            if (IsRunningAsAdmin())
-            {
-                lblAdminStatus.Text = "Admin: YES ✔";
-                lblAdminStatus.ForeColor = Color.Lime;
-            }
-            else
-            {
-                lblAdminStatus.Text = "Admin: NO ❌";
-                lblAdminStatus.ForeColor = Color.OrangeRed;
-            }
-
             trayIconNormal = this.Icon;
             trayIconAlert = Properties.Resources.Icon;
             LoadSavedSettings();
@@ -335,6 +327,7 @@ namespace Optimizer
             this.MaximumSize = this.Size;
             this.MinimumSize = this.Size;
             lblVersion.Text = Application.ProductVersion; // ✅ SAFE HERE TOO
+
         }
 
         protected override void WndProc(ref Message m)
@@ -454,16 +447,16 @@ namespace Optimizer
             }
         }
 
-        // FETCH DATA (Runs every 1s)
         private void UsageTimer_Tick(object sender, EventArgs e)
         {
             targetCpu = (int)Math.Min(100, cpuCounter.NextValue());
             targetRam = GetRamUsage();
             targetDriveUsage = GetDriveUsage();
+
             UpdateDriveTooltip();
             UpdateEmulatorStatus();
             targetOverall = CalculateOverallCondition(targetCpu, targetRam, targetDriveUsage);
-
+            animationTimer.Interval = tgReduceAnimations.Checked ? 40 : 16;
         }
 
         // RENDER SMOOTH ANIMATION (Runs every 16ms)
@@ -636,11 +629,26 @@ namespace Optimizer
             return "Unknown";
         }
 
-        private void ShowPanel(Panel p)
-        {
-            Homepnl.Visible = Cleanerpnl.Visible = boostpnl.Visible = gamemodpnl.Visible = settingspnl.Visible = infopnl.Visible = false;
-            p.Visible = true;
-        }
+        private void ShowPanel(Panel p, string panelName)
+{
+    // Hide all panels
+    Homepnl.Visible = Cleanerpnl.Visible = boostpnl.Visible = gamemodpnl.Visible = settingspnl.Visible = infopnl.Visible = false;
+
+    // Show selected panel
+    p.Visible = true;
+
+    // ✅ Save last panel only if toggle is ON
+    if (rememberLastPanel)
+    {
+        lastPanel = panelName;
+        Properties.Settings.Default.LastPanel = lastPanel;
+        Properties.Settings.Default.Save();
+    }
+}
+
+
+
+
 
         void CleanFolder(string path)
         {
@@ -658,12 +666,13 @@ namespace Optimizer
 
         enum RecycleFlags { SHERB_NOCONFIRMATION = 0x00000001, SHERB_NOPROGRESSUI = 0x00000002, SHERB_NOSOUND = 0x00000004 }
 
-        private void guna2Button1_Click(object s, EventArgs e) => ShowPanel(Homepnl);
-        private void guna2Button2_Click(object s, EventArgs e) => ShowPanel(boostpnl);
-        private void guna2Button3_Click(object s, EventArgs e) => ShowPanel(Cleanerpnl);
-        private void guna2Button4_Click(object s, EventArgs e) => ShowPanel(gamemodpnl);
-        private void guna2Button5_Click(object s, EventArgs e) => ShowPanel(settingspnl);
-        private void guna2Button6_Click(object s, EventArgs e) => ShowPanel(infopnl);
+        private void guna2Button1_Click(object s, EventArgs e) => ShowPanel(Homepnl, "Homepnl");
+        private void guna2Button2_Click(object s, EventArgs e) => ShowPanel(boostpnl, "boostpnl");
+        private void guna2Button3_Click(object s, EventArgs e) => ShowPanel(Cleanerpnl, "Cleanerpnl");
+        private void guna2Button4_Click(object s, EventArgs e) => ShowPanel(gamemodpnl, "gamemodpnl");
+        private void guna2Button5_Click(object s, EventArgs e) => ShowPanel(settingspnl, "settingspnl");
+        private void guna2Button6_Click(object s, EventArgs e) => ShowPanel(infopnl, "infopnl");
+
 
         private void btnCleanNow_Click_1(object sender, EventArgs e)
         {
@@ -1149,66 +1158,6 @@ namespace Optimizer
             }
         }
 
-        private bool suppressStartWithWindowsEvent = false;
-
-        private void tgStartWithWindows_CheckedChanged(object sender, EventArgs e)
-        {
-            if (suppressStartWithWindowsEvent)
-                return;
-
-            // 🔒 CHECK ADMIN FIRST
-            if (tgStartWithWindows.Checked && !IsRunningAsAdmin())
-            {
-                suppressStartWithWindowsEvent = true;
-
-                tgStartWithWindows.Checked = false;
-
-                suppressStartWithWindowsEvent = false;
-
-                SetAdminStatus(
-                    "Admin Rights Required ⚠",
-                    Color.Red
-                );
-                return;
-            }
-
-            try
-            {
-                using (RegistryKey rk = Registry.CurrentUser.OpenSubKey(
-                    @"SOFTWARE\Microsoft\Windows\CurrentVersion\Run", true))
-                {
-                    if (tgStartWithWindows.Checked)
-                    {
-                        rk.SetValue("Optimizer", Application.ExecutablePath);
-
-                        SetAdminStatus(
-                            "Start With Windows: ENABLED",
-                            Color.Lime
-                        );
-                    }
-                    else
-                    {
-                        rk.DeleteValue("Optimizer", false);
-
-                        SetAdminStatus(
-                            "Start With Windows: DISABLED",
-                            Color.Orange
-                        );
-                    }
-                }
-            }
-            catch
-            {
-                SetAdminStatus(
-                    "Permission Denied ⚠ Run as Admin",
-                    Color.Red
-                );
-            }
-            Properties.Settings.Default.StartWithWindows = tgStartWithWindows.Checked;
-            Properties.Settings.Default.Save();
-        }
-
-
 
 
         private bool IsRunningAsAdmin()
@@ -1220,12 +1169,8 @@ namespace Optimizer
 
         private void btnRestoreDefaults_Click(object sender, EventArgs e)
         {
-            tgStartWithWindows.Checked = false;
             tgMinimizeToTray.Checked = false;
             tgReduceAnimations.Checked = false;
-            tgNormalGame.Checked = false;
-            tgAdvancedGame.Checked = false;
-            tgBgApps.Checked = false;
 
             Properties.Settings.Default.Reset();
             Properties.Settings.Default.Save();
@@ -1235,41 +1180,6 @@ namespace Optimizer
                 Color.DeepSkyBlue
             );
         }
-
-
-
-        
-
-        private void LoadStartWithWindowsState()
-        {
-            try
-            {
-                using (RegistryKey rk = Registry.CurrentUser.OpenSubKey(
-                    @"SOFTWARE\Microsoft\Windows\CurrentVersion\Run", false))
-                {
-                    bool enabled = rk?.GetValue("Optimizer") != null;
-
-                    // Prevent event firing while syncing
-                    suppressStartWithWindowsEvent = true;
-                    tgStartWithWindows.Checked = enabled;
-                    suppressStartWithWindowsEvent = false;
-
-                    SetAdminStatus(
-                        enabled ? "Start With Windows: ENABLED" : "Start With Windows: DISABLED",
-                        enabled ? Color.Lime : Color.Orange
-                    );
-                }
-            }
-            catch
-            {
-                SetAdminStatus(
-                    "Unable to Read Startup Status",
-                    Color.Red
-                );
-            }
-        }
-
-
 
         private void tgMinimizeToTray_CheckedChanged(object sender, EventArgs e)
         {
@@ -1383,7 +1293,22 @@ namespace Optimizer
 
         private void Optimizer_Load(object sender, EventArgs e)
         {
+            if (rememberLastPanel)
+            {
+                // Load last panel
+                string panelToShow = Properties.Settings.Default.LastPanel ?? "Homepnl";
 
+                switch (panelToShow)
+                {
+                    case "Homepnl": ShowPanel(Homepnl, "Homepnl"); break;
+                    case "boostpnl": ShowPanel(boostpnl, "boostpnl"); break;
+                    case "Cleanerpnl": ShowPanel(Cleanerpnl, "Cleanerpnl"); break;
+                    case "gamemodpnl": ShowPanel(gamemodpnl, "gamemodpnl"); break;
+                    case "settingspnl": ShowPanel(settingspnl, "settingspnl"); break;
+                    case "infopnl": ShowPanel(infopnl, "infopnl"); break;
+                    default: ShowPanel(Homepnl, "Homepnl"); break;
+                }
+            }
         }
     }
 }
