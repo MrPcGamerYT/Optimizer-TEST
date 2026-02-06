@@ -4,6 +4,27 @@
 It is designed to improve system performance, clean junk files, boost games & emulators, and monitor system health — all through a smooth, futuristic UI.
 
 ---
+## 📸 Screenshots
+
+### 🏠 Home Panel
+![Home Panel]()
+
+### 🧹 Cleaner Panel
+![Cleaner Panel]()
+
+### 🚀 Booster Panel
+![Booster Panel]()
+
+### 🎮 Game & Emulator Boost
+![Game Mode Panel]()
+
+### ⚙️ Settings Panel
+![Settings Panel](https://github.com/MrPcGamerYT/Optimizer/blob/main/screenshots/settings.png)
+
+### ℹ️️ Information Panel
+![Information Panel]()
+
+---
 
 ## ✨ Features
 
