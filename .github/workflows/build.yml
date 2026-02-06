@@ -32,7 +32,7 @@ jobs:
         nuget restore "$projectFile"
         msbuild "$projectFile" /p:Configuration=Release /p:Platform="Any CPU" /p:OutputPath="${{ github.workspace }}\publish\"
 
-    # 🔹 Build Installer (Inno Setup)
+    # 🔹 Build Installer
     - name: Build Installer
       uses: Minionguyjpro/Inno-Setup-Action@v1.2.2
       with:
@@ -72,7 +72,7 @@ jobs:
         git config user.name "github-actions"
         git config user.email "github-actions@github.com"
         git add update.json
-        git commit -m "Update update.json to v$env:VERSION" || echo "No changes"
+        git commit -m "Update update.json to $env:VERSION" || echo "No changes"
         git push
 
     # 🚀 Create Release
