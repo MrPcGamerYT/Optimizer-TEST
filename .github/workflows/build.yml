@@ -26,7 +26,6 @@ jobs:
       run: |
         $projectFile = Get-ChildItem -Recurse -Filter "*.csproj" | Select-Object -First 1 -ExpandProperty FullName
         nuget restore "$projectFile"
-        # Force the output to the publish folder
         msbuild "$projectFile" /p:Configuration=Release /p:Platform="Any CPU" /p:OutputPath="${{ github.workspace }}\publish\"
 
     - name: Build Installer (Inno Setup)
@@ -34,11 +33,11 @@ jobs:
       with:
         path: installer.iss
 
-    - name: Create or Update Release v1
+    - name: Create Release
       uses: softprops/action-gh-release@v2
       with:
-        tag_name: v1.0
-        name: Release v1.0
+        tag_name: v1.${{ github.run_number }}
+        name: Release v1.${{ github.run_number }}
         draft: false
         prerelease: false
         files: setup_output/Optimizer-v1-Setup.exe
@@ -46,5 +45,3 @@ jobs:
         fail_on_unmatched_files: false
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-
