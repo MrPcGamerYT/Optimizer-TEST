@@ -6,57 +6,69 @@ using System.Windows.Forms;
 
 class Updater
 {
+    private const string UpdateInfoUrl =
+        "https://raw.githubusercontent.com/MrPcGamerYT/Optimizer/main/update.json";
+
     public static void CheckAndUpdate()
     {
         try
         {
             using (WebClient wc = new WebClient())
             {
-                string versionInfo = wc.DownloadString(
-                    "https://raw.githubusercontent.com/MrPcGamerYT/Optimizer/refs/heads/main/update.json"
-                );
+                wc.CachePolicy = new System.Net.Cache.RequestCachePolicy(
+                    System.Net.Cache.RequestCacheLevel.NoCacheNoStore);
 
-                string[] lines = versionInfo
+                string[] lines = wc.DownloadString(UpdateInfoUrl)
                     .Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
 
-                string latestVersion = lines[0].Trim();
+                if (lines.Length < 2)
+                    throw new Exception("Invalid update.json format");
+
+                string latestVersionText = lines[0].Trim();
                 string installerUrl = lines[1].Trim();
 
-                string currentVersion = Application.ProductVersion;
+                Version latestVersion = new Version(latestVersionText);
+                Version currentVersion = new Version(Application.ProductVersion);
 
-                if (latestVersion != currentVersion)
+                if (latestVersion <= currentVersion)
+                    return; // already up to date
+
+                DialogResult result = MessageBox.Show(
+                    $"New version {latestVersion} is available.\n\nUpdate now?",
+                    "Optimizer Update",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Information
+                );
+
+                if (result != DialogResult.Yes)
+                    return;
+
+                string installerPath = Path.Combine(
+                    Path.GetTempPath(),
+                    "OptimizerSetup.exe"
+                );
+
+                if (File.Exists(installerPath))
+                    File.Delete(installerPath);
+
+                wc.DownloadFile(installerUrl, installerPath);
+
+                // ✅ RUN INSTALLER ONLY
+                Process.Start(new ProcessStartInfo
                 {
-                    if (MessageBox.Show(
-                        $"New version {latestVersion} is available.\n\nUpdate now?",
-                        "Optimizer Update",
-                        MessageBoxButtons.YesNo,
-                        MessageBoxIcon.Information) == DialogResult.Yes)
-                    {
-                        string installerPath = Path.Combine(
-                            Path.GetTempPath(),
-                            "OptimizerSetup.exe"
-                        );
+                    FileName = installerPath,
+                    UseShellExecute = true,
+                    Verb = "runas"
+                });
 
-                        wc.DownloadFile(installerUrl, installerPath);
-
-                        // 🔥 RUN INSTALLER ONLY
-                        Process.Start(new ProcessStartInfo
-                        {
-                            FileName = installerPath,
-                            UseShellExecute = true,
-                            Verb = "runas" // admin
-                        });
-
-                        // 🔴 EXIT APP IMMEDIATELY
-                        Application.Exit();
-                    }
-                }
+                // ❌ DO NOT restart app
+                Application.Exit();
             }
         }
         catch (Exception ex)
         {
             MessageBox.Show(
-                "Could not check for updates.\n" + ex.Message,
+                "Update failed:\n" + ex.Message,
                 "Update Error",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Error
