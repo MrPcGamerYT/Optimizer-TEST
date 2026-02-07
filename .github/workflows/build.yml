@@ -68,11 +68,11 @@ jobs:
       run: |
         $installer = Get-ChildItem -Recurse -Filter "OptimizerSetup.exe" | Select-Object -First 1
         if (-not $installer) {
-            Write-Host "Error: OptimizerSetup.exe not found!"
-            exit 1
+        Write-Host "Error: OptimizerSetup.exe not found!"
+        exit 1
         } else {
-            Write-Host "Found installer: $($installer.FullName)"
-            Write-Host "INSTALLER_PATH=$($installer.FullName)" >> $env:GITHUB_ENV
+        Write-Host "Found installer: $($installer.FullName)"
+        Write-Host "INSTALLER_PATH=$($installer.FullName)" >> $env:GITHUB_ENV
         }
 
     - name: Commit update.json
@@ -87,13 +87,14 @@ jobs:
     - name: Create Release
       uses: softprops/action-gh-release@v2
       with:
-        tag_name: "v${{ env.VERSION }}"
-        name: "Release OptimizerSetup v${{ env.VERSION }}"
-        files: ${{ env.INSTALLER_PATH }}
-        make_latest: true
-        fail_on_unmatched_files: true
+       tag_name: "v${{ env.VERSION }}"
+       name: "Release OptimizerSetup v${{ env.VERSION }}"
+       files: ${{ env.INSTALLER_PATH }}   # <- full path now
+       make_latest: true
+       fail_on_unmatched_files: true
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 
     - name: Delete old releases
       shell: pwsh
