@@ -12,8 +12,26 @@ jobs:
     steps:
     - name: Checkout Code
       uses: actions/checkout@v4
+  
+    - name: Generate update.json
+      shell: pwsh
+      run: |
+        $json = @{
+            version = "1.0.1"
+            url     = "https://github.com/MrPcGamerYT/Optimizer/releases/latest/download/OptimizerSetup.exe"
+        } | ConvertTo-Json -Compress
+        $json | Set-Content -Path update.json -Encoding UTF8
+        Write-Host "Generated update.json: $json"
 
-    # 2️⃣ Update AssemblyInfo.cs with the new version
+    - name: Commit updater.json
+      shell: pwsh
+      run: |
+        git config user.name "github-actions"
+        git config user.email "github-actions@github.com"
+        git add update.json
+        git commit -m "Update update.json to $env:VERSION" || echo "No changes"
+        git push
+
     - name: Update AssemblyInfo.cs
       shell: pwsh
       run: |
