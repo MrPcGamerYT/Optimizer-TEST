@@ -1,7 +1,7 @@
 name: Update Project Version
 
 on:
-  workflow_dispatch:   # Manual trigger
+  workflow_dispatch:
 
 jobs:
   update-version:
@@ -13,7 +13,6 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v4
 
-    # 1️⃣ Read updater.json version
     - name: Read version from updater.json
       shell: pwsh
       run: |
@@ -24,60 +23,45 @@ jobs:
         if ([string]::IsNullOrWhiteSpace($version)) { Write-Error "Version is empty!"; exit 1 }
         Write-Host "APP_VERSION=$version" >> $env:GITHUB_ENV
 
-    # 2️⃣ Update AssemblyInfo.cs using regex replacement
     - name: Update AssemblyInfo.cs
       shell: pwsh
       run: |
         $assemblyPath = "Optimizer/Properties/AssemblyInfo.cs"
         if (-not (Test-Path $assemblyPath)) { Write-Error "AssemblyInfo.cs not found!"; exit 1 }
-
         $version = $env:APP_VERSION
-        $content = Get-Content $assemblyPath -Raw
+        $lines = Get-Content $assemblyPath
 
-        # Replace or add AssemblyVersion and AssemblyFileVersion lines
-        if ($content -match 'AssemblyVersion\(".*"\)') {
-            $content = $content -replace 'AssemblyVersion\(".*"\)', "AssemblyVersion(`"$version`")"
-        } else {
-            $content += "`n[assembly: AssemblyVersion(`"$version`")]"
+        # Update AssemblyVersion and AssemblyFileVersion
+        $lines = $lines | ForEach-Object {
+            if ($_ -match 'AssemblyVersion\(".*"\)') { "[assembly: AssemblyVersion(`"$version`")]" }
+            elseif ($_ -match 'AssemblyFileVersion\(".*"\)') { "[assembly: AssemblyFileVersion(`"$version`")]" }
+            else { $_ }
         }
 
-        if ($content -match 'AssemblyFileVersion\(".*"\)') {
-            $content = $content -replace 'AssemblyFileVersion\(".*"\)', "AssemblyFileVersion(`"$version`")"
-        } else {
-            $content += "`n[assembly: AssemblyFileVersion(`"$version`")]"
-        }
-
-        # Save the updated AssemblyInfo.cs
-        $content | Set-Content $assemblyPath -Encoding UTF8
+        # Save back
+        $lines | Set-Content $assemblyPath -Encoding UTF8
         Write-Host "AssemblyInfo.cs updated to version $version"
 
-    # 3️⃣ Update .csproj version safely
-    - name: Update csproj version
+    - name: Update csproj AssemblyVersion/FileVersion if exist
       shell: pwsh
       run: |
         $projectFile = Get-ChildItem -Recurse -Filter "*.csproj" | Select-Object -First 1 -ExpandProperty FullName
         [xml]$csproj = Get-Content $projectFile
 
-        # Use first PropertyGroup
-        $pg = $csproj.Project.PropertyGroup[0]
-
         function Set-OrCreateNode($parent, $name, $value) {
             $node = $parent.SelectSingleNode($name)
-            if (-not $node) {
-                $node = $csproj.CreateElement($name)
-                $parent.AppendChild($node) | Out-Null
-            }
-            $node.InnerText = $value
+            if ($node) { $node.InnerText = $value }
         }
 
-        Set-OrCreateNode $pg "Version" $env:APP_VERSION
-        Set-OrCreateNode $pg "FileVersion" $env:APP_VERSION
+        # Only update existing nodes, do NOT create <Version> for .NET Framework
+        $pg = $csproj.Project.PropertyGroup[0]
+
         Set-OrCreateNode $pg "AssemblyVersion" $env:APP_VERSION
+        Set-OrCreateNode $pg "FileVersion" $env:APP_VERSION
 
         $csproj.Save($projectFile)
-        Write-Host "$projectFile version updated to $env:APP_VERSION"
+        Write-Host "$projectFile AssemblyVersion/FileVersion updated to $env:APP_VERSION"
 
-    # 4️⃣ Commit changes
     - name: Commit updated files
       shell: pwsh
       run: |
