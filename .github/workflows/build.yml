@@ -15,6 +15,15 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v4
 
+    # 🔹 Read version from update.json
+    - name: Read version
+      id: version
+      shell: pwsh
+      run: |
+        $json = Get-Content update.json | ConvertFrom-Json
+        echo "VERSION=$($json.version)" >> $env:GITHUB_ENV
+        Write-Host "Version: $($json.version)"
+
     - name: Setup MSBuild
       uses: microsoft/setup-msbuild@v2
 
@@ -24,9 +33,9 @@ jobs:
     - name: Build Project
       shell: pwsh
       run: |
-        $projectFile = Get-ChildItem -Recurse -Filter "*.csproj" | Select-Object -First 1 -ExpandProperty FullName
-        nuget restore "$projectFile"
-        msbuild "$projectFile" /p:Configuration=Release /p:Platform="Any CPU" /p:OutputPath="${{ github.workspace }}\publish\"
+        $projectFile = Get-ChildItem -Recurse -Filter "*.csproj" -File | Select-Object -First 1
+        nuget restore $projectFile.FullName
+        msbuild $projectFile.FullName /p:Configuration=Release /p:Platform="Any CPU"
 
     - name: Build Installer
       uses: Minionguyjpro/Inno-Setup-Action@v1.2.2
@@ -38,26 +47,29 @@ jobs:
       run: |
         Get-ChildItem -Recurse -Filter OptimizerSetup.exe
 
+    # 🚀 Create Release using VERSION
     - name: Create Release
       uses: softprops/action-gh-release@v2
       with:
-        tag_name: Optimizer
-        name: Release OptimizerSetup
+        tag_name: v${{ env.VERSION }}
+        name: Optimizer v${{ env.VERSION }}
         files: setup_output/OptimizerSetup.exe
         make_latest: true
-        fail_on_unmatched_files: true
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ github.token }}
 
-    - name: Delete old releases (keep latest)
+    # 🧹 Delete old releases (keep latest)
+    - name: Delete old releases
       shell: pwsh
       env:
-        GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        GH_TOKEN: ${{ github.token }}
       run: |
-        $tags = gh release list --json tagName,createdAt --jq 'sort_by(.createdAt) | reverse | .[1:] | .[].tagName'
+        $tags = gh release list --json tagName,createdAt `
+          --jq 'sort_by(.createdAt) | reverse | .[1:] | .[].tagName'
+
         if ($tags) {
           foreach ($tag in $tags) {
-            Write-Host "Deleting release: $tag"
+            Write-Host "Deleting old release: $tag"
             gh release delete $tag -y --cleanup-tag
           }
         } else {
