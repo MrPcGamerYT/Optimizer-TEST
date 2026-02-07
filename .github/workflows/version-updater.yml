@@ -1,7 +1,11 @@
 name: Update Project Version
 
 on:
-  workflow_dispatch:   # Manual trigger
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Project version (example: 1.0.1)"
+        required: true
 
 jobs:
   update-version:
@@ -12,26 +16,31 @@ jobs:
     steps:
     - name: Checkout Code
       uses: actions/checkout@v4
-  
+
+    # 1️⃣ Generate update.json using the SAME version
     - name: Generate update.json
       shell: pwsh
       run: |
+        $version = "${{ github.event.inputs.version }}"
+
         $json = @{
-            version = "1.0.1"
+            version = $version
             url     = "https://github.com/MrPcGamerYT/Optimizer/releases/latest/download/OptimizerSetup.exe"
         } | ConvertTo-Json -Compress
+
         $json | Set-Content -Path update.json -Encoding UTF8
         Write-Host "Generated update.json: $json"
 
-    - name: Commit updater.json
+    - name: Commit update.json
       shell: pwsh
       run: |
         git config user.name "github-actions"
         git config user.email "github-actions@github.com"
         git add update.json
-        git commit -m "Update update.json to $env:VERSION" || echo "No changes"
+        git commit -m "Update update.json to ${{ github.event.inputs.version }}" || echo "No changes"
         git push
 
+    # 2️⃣ Update AssemblyInfo.cs with SAME version
     - name: Update AssemblyInfo.cs
       shell: powershell
       run: |
@@ -50,10 +59,11 @@ jobs:
 
         Write-Host "Updated AssemblyInfo.cs to version $version"
 
-    - name: Commit changes
+    - name: Commit AssemblyInfo.cs
+      shell: pwsh
       run: |
         git config user.name "github-actions"
         git config user.email "github-actions@github.com"
         git add .
-        git commit -m "Update AssemblyInfo version to ${{ github.event.inputs.version }}"
+        git commit -m "Update AssemblyInfo version to ${{ github.event.inputs.version }}" || echo "No changes"
         git push
