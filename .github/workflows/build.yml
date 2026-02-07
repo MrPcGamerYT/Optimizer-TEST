@@ -20,7 +20,6 @@ jobs:
     - name: Generate updater.json
       shell: pwsh
       run: |
-        # Generate version from run number
         $runNumber = [int]$env:GITHUB_RUN_NUMBER
         $major = 1
         $minor = [math]::Floor($runNumber / 10000)
@@ -28,10 +27,9 @@ jobs:
         $revision = $runNumber % 100
         $version = "$major.$minor.$build.$revision"
 
-        # Set GitHub env variable
-        Write-Host "VERSION=$version" >> $env:GITHUB_ENV
+        # Make sure VERSION is exported to all subsequent steps
+        Write-Host "VERSION=$version" >> $GITHUB_ENV
 
-        # Create updater.json
         $json = @{
             version = $version
             url     = "https://github.com/MrPcGamerYT/Optimizer/releases/latest/download/OptimizerSetup.exe"
@@ -40,12 +38,11 @@ jobs:
         $json | Set-Content -Path update.json -Encoding UTF8
         Write-Host "Generated update.json: $json"
 
-    # 🔹 Update AssemblyInfo.cs version
-    - name: Sync AssemblyInfo.cs version
+    # 🔹 Update AssemblyInfo.cs with VERSION
+    - name: Update AssemblyInfo.cs
       shell: pwsh
       run: |
         $assemblyFile = "Optimizer/Properties/AssemblyInfo.cs"
-
         if (-Not (Test-Path $assemblyFile)) {
           Write-Error "AssemblyInfo.cs not found at $assemblyFile"
           exit 1
@@ -73,10 +70,12 @@ jobs:
       shell: pwsh
       run: |
         $projectFile = Get-ChildItem -Recurse -Filter "*.csproj" | Select-Object -First 1 -ExpandProperty FullName
-        Write-Host "Restoring NuGet packages for $projectFile"
-        nuget restore $projectFile
+        $solutionDir = Split-Path $projectFile -Parent
 
-        Write-Host "Building project $projectFile..."
+        Write-Host "Restoring NuGet packages..."
+        nuget restore $projectFile -SolutionDirectory $solutionDir
+
+        Write-Host "Building project..."
         msbuild $projectFile /p:Configuration=Release /p:Platform="Any CPU" /p:OutputPath="${{ github.workspace }}\publish\"
 
     # 🔹 Build Installer
