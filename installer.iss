@@ -1,3 +1,5 @@
+#define MyOutputDir "publish"
+
 [Setup]
 AppName=Optimizer
 AppVersion=1.0.0
@@ -6,22 +8,10 @@ DefaultGroupName=Optimizer
 UninstallDisplayIcon={app}\Optimizer.exe
 Compression=lzma
 SolidCompression=yes
-OutputDir={src}\publish
+OutputDir={#MyOutputDir}
 OutputBaseFilename=OptimizerSetup
-
-; --- PUBLISHER DETAILS ---
-AppPublisher=Mr.Pc Gamer
-AppPublisherURL=https://github.com/MrPcGamerYT/Optimizer
-VersionInfoCompany=Mr.Pc Gamer
-VersionInfoDescription=Optimizer System Setup
-VersionInfoVersion=1.0.0.0
-VersionInfoCopyright=© 2026 Mr.Pc Gamer. All Rights Reserved.
-
-; --- ADMIN RIGHTS ---
 PrivilegesRequired=admin
-
-; --- ICON FIX ---
-SetupIconFile=Optimizer\app_icon.ico 
+SetupIconFile=Optimizer\app_icon.ico
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
