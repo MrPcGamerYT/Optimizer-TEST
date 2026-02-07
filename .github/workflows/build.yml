@@ -16,6 +16,19 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v4
 
+    - name: Sync AssemblyInfo version with update.json
+      shell: pwsh
+      run: |
+          $assemblyFile = "MyApp/Properties/AssemblyInfo.cs"
+          Write-Host "Updating AssemblyInfo.cs with version $env:VERSION"
+
+          # Replace AssemblyVersion and AssemblyFileVersion
+          (Get-Content $assemblyFile) `
+          -replace 'AssemblyVersion\(".*"\)', "AssemblyVersion(`"$env:VERSION`")" `
+          -replace 'AssemblyFileVersion\(".*"\)', "AssemblyFileVersion(`"$env:VERSION`")" `
+          | Set-Content $assemblyFile
+
+
     # 🔹 Setup MSBuild
     - name: Setup MSBuild
       uses: microsoft/setup-msbuild@v2
