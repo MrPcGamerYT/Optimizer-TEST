@@ -11,9 +11,6 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v4
 
-    - name: Setup PowerShell
-      uses: actions/setup-powershell@v2
-
     - name: Increment Version and Update Files
       shell: pwsh
       run: |
