@@ -1,5 +1,3 @@
-#define MyOutputDir "publish"
-
 [Setup]
 AppName=Optimizer
 AppVersion=1.0.0
@@ -8,7 +6,7 @@ DefaultGroupName=Optimizer
 UninstallDisplayIcon={app}\Optimizer.exe
 Compression=lzma
 SolidCompression=yes
-OutputDir={#MyOutputDir}
+OutputDir=setup_output
 OutputBaseFilename=OptimizerSetup
 
 ; --- PUBLISHER DETAILS ---
