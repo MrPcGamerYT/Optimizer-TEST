@@ -1,4 +1,4 @@
-name: Build and Release Manual Version
+name: Build and Release Using updater.json Version
 
 on:
   push:
@@ -12,20 +12,21 @@ jobs:
       contents: write
 
     steps:
-    # 🔹 Checkout repo
+    # 1️⃣ Checkout repo
     - name: Checkout Code
       uses: actions/checkout@v4
 
-    # 🔹 Read manual version from update.json
-    - name: Read version from update.json
+    # 2️⃣ Read version from update.json
+    - name: Read updater.json version
       shell: pwsh
       run: |
-        if (-Not (Test-Path "update.json")) {
-          Write-Error "update.json not found! Create it with a valid version first."
+        $jsonPath = "update.json"
+        if (-not (Test-Path $jsonPath)) {
+          Write-Error "update.json not found! Please create it first."
           exit 1
         }
 
-        $json = Get-Content update.json | ConvertFrom-Json
+        $json = Get-Content $jsonPath | ConvertFrom-Json
         $version = $json.version
 
         if ([string]::IsNullOrWhiteSpace($version)) {
@@ -33,39 +34,38 @@ jobs:
           exit 1
         }
 
-        Write-Host "Using manual version: $version"
-        Write-Host "APP_VERSION=$version" >> $GITHUB_ENV
+        Write-Host "Updater version: $version"
+        Write-Host "APP_VERSION=$version" >> $env:GITHUB_ENV
 
-    # 🔹 Update AssemblyInfo.cs with manual version
+    # 3️⃣ Update AssemblyInfo.cs version to match updater.json
     - name: Update AssemblyInfo.cs
       shell: pwsh
       run: |
         $assemblyFile = "Optimizer/Properties/AssemblyInfo.cs"
-
-        if (-Not (Test-Path $assemblyFile)) {
+        if (-not (Test-Path $assemblyFile)) {
           Write-Error "AssemblyInfo.cs not found!"
           exit 1
         }
 
         $version = $env:APP_VERSION
-        Write-Host "Setting AssemblyInfo.cs version to $version"
+        Write-Host "Updating AssemblyInfo.cs version to $version"
 
         (Get-Content $assemblyFile) `
           -replace 'AssemblyVersion\(".*"\)', "AssemblyVersion(`"$version`")" `
           -replace 'AssemblyFileVersion\(".*"\)', "AssemblyFileVersion(`"$version`")" `
           | Set-Content $assemblyFile
 
-        Write-Host "AssemblyInfo.cs updated successfully"
+        Write-Host "AssemblyInfo.cs updated successfully."
 
-    # 🔹 Setup MSBuild
+    # 4️⃣ Setup MSBuild
     - name: Setup MSBuild
       uses: microsoft/setup-msbuild@v2
 
-    # 🔹 Setup NuGet
+    # 5️⃣ Setup NuGet
     - name: Setup NuGet
       uses: NuGet/setup-nuget@v1
 
-    # 🔹 Build Project
+    # 6️⃣ Restore packages and Build EXE
     - name: Build Project
       shell: pwsh
       run: |
@@ -78,29 +78,19 @@ jobs:
         Write-Host "Building project..."
         msbuild $projectFile /p:Configuration=Release /p:Platform="Any CPU" /p:OutputPath="${{ github.workspace }}\publish\"
 
-    # 🔹 Build Installer
+    # 7️⃣ Build Installer
     - name: Build Installer
       uses: Minionguyjpro/Inno-Setup-Action@v1.2.2
       with:
         path: installer.iss
 
-    # 🔹 Debug Installer Output
+    # 8️⃣ Debug EXE output
     - name: Debug Installer Output
       shell: pwsh
       run: |
         Get-ChildItem -Recurse -Filter OptimizerSetup.exe
 
-    # 🔹 Commit any changes to updater.json (optional)
-    - name: Commit updater.json
-      shell: pwsh
-      run: |
-        git config user.name "github-actions"
-        git config user.email "github-actions@github.com"
-        git add update.json
-        git commit -m "Update updater.json to $env:APP_VERSION" || echo "No changes"
-        git push
-
-    # 🚀 Create Release with manual version
+    # 9️⃣ Create Release using manual version
     - name: Create Release
       uses: softprops/action-gh-release@v2
       with:
@@ -112,7 +102,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    # 🧹 Delete old releases (keep latest)
+    # 🔟 Delete old releases (keep latest)
     - name: Delete old releases
       shell: pwsh
       env:
