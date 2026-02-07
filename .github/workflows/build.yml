@@ -24,13 +24,25 @@ jobs:
     - name: Setup NuGet
       uses: NuGet/setup-nuget@v1
 
-    # 🔹 Build Project
+    # 🔹 Build Project with synced version
     - name: Build Project
       shell: pwsh
       run: |
         $projectFile = Get-ChildItem -Recurse -Filter "*.csproj" | Select-Object -First 1 -ExpandProperty FullName
-        nuget restore "$projectFile"
-        msbuild "$projectFile" /p:Configuration=Release /p:Platform="Any CPU" /p:OutputPath="${{ github.workspace }}\publish\"
+    
+        # Update csproj version with the updater.json version
+        [xml]$csproj = Get-Content $projectFile
+         $csproj.Project.PropertyGroup.Version = $env:VERSION
+        $csproj.Project.PropertyGroup.FileVersion = $env:VERSION
+        $csproj.Project.PropertyGroup.AssemblyVersion = $env:VERSION
+        $csproj.Save($projectFile)
+    
+        # Restore NuGet packages
+        nuget restore $projectFile
+
+        # Build EXE
+        msbuild $projectFile /p:Configuration=Release /p:Platform="Any CPU" /p:OutputPath="${{ github.workspace }}\publish\"
+
 
     # 🔹 Build Installer
     - name: Build Installer
