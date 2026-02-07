@@ -60,11 +60,18 @@ jobs:
         $projectFile = Get-ChildItem -Recurse -Filter "*.csproj" | Select-Object -First 1 -ExpandProperty FullName
         [xml]$csproj = Get-Content $projectFile
 
-        if (-not $csproj.Project.PropertyGroup.Version) {
+        # Pick the first PropertyGroup (or the one with Version)
+        $pg = $csproj.Project.PropertyGroup | Where-Object { $_.Version }
+        if (-not $pg) { $pg = $csproj.Project.PropertyGroup[0] }
+
+        # Create Version element if it doesn't exist
+        if (-not $pg.Version) {
           $node = $csproj.CreateElement("Version")
-          $csproj.Project.PropertyGroup.AppendChild($node) | Out-Null
+          $pg.AppendChild($node) | Out-Null
         }
-        $csproj.Project.PropertyGroup.Version = $env:APP_VERSION
+
+        # Set Version
+        $pg.Version = $env:APP_VERSION
         $csproj.Save($projectFile)
         Write-Host "$projectFile version updated to $env:APP_VERSION"
 
