@@ -64,18 +64,16 @@ jobs:
       with:
         path: installer.iss
 
-    # 7️⃣ Generate update.json
+    # 7️⃣ Update update.json
     - name: Update update.json
       shell: pwsh
       run: |
-        $json = @"
-        {
-          "version": "$env:VERSION",
-          "url": "https://github.com/MrPcGamerYT/Optimizer/releases/latest/download/OptimizerSetup.exe"
+        $jsonObject = @{
+          version = $env:VERSION
+          url     = "https://github.com/MrPcGamerYT/Optimizer/releases/latest/download/OptimizerSetup.exe"
         }
-"@
-        $json | Set-Content -Path update.json -Encoding UTF8
-        Write-Host "update.json updated: $json"
+        $jsonObject | ConvertTo-Json -Compress | Set-Content -Path update.json -Encoding UTF8
+        Write-Host "update.json updated: $($jsonObject | ConvertTo-Json -Compress)"
 
     # 8️⃣ Commit update.json
     - name: Commit update.json
