@@ -73,9 +73,10 @@ jobs:
     - name: Build Project
       shell: pwsh
       run: |
-        $projectFile = Get-ChildItem -Recurse -Filter "*.csproj" -File | Select-Object -First 1
-        nuget restore $projectFile.FullName
-        msbuild $projectFile.FullName /p:Configuration=Release /p:Platform="Any CPU"
+        $projectFile = Get-ChildItem -Recurse -Filter "*.csproj" | Select-Object -First 1 -ExpandProperty FullName
+        nuget restore "$projectFile"
+        msbuild "$projectFile" /p:Configuration=Release /p:Platform="Any CPU" /p:OutputPath="${{ github.workspace }}\publish\"
+
 
     # 5️⃣ Build installer
     - name: Build Installer
