@@ -24,7 +24,7 @@ jobs:
     - name: Setup NuGet
       uses: NuGet/setup-nuget@v1
 
-    # 🧠 Read and update version from update.json
+    # 🧠 Generate version and update update.json
     - name: Generate version and update update.json
       shell: pwsh
       run: |
@@ -66,22 +66,23 @@ jobs:
           /p:AssemblyVersion=$env:VERSION `
           /p:InformationalVersion=$env:VERSION
 
-    # 🔹 Build Installer (make sure installer.iss sets OutputDir={src}\publish)
+    # 🔹 Build Installer
     - name: Build Installer
       uses: Minionguyjpro/Inno-Setup-Action@v1.2.2
       with:
         path: installer.iss
 
-    # 🔹 Verify installer exists
-    - name: Verify Installer
+    # 🔹 Locate Installer dynamically
+    - name: Locate Installer
       shell: pwsh
       run: |
-        if (-not (Test-Path "publish/OptimizerSetup.exe")) {
+        $installer = Get-ChildItem -Recurse -Filter "OptimizerSetup.exe" | Select-Object -First 1
+        if (-not $installer) {
             Write-Host "Error: OptimizerSetup.exe not found!"
             exit 1
         } else {
-            Write-Host "Installer found: publish/OptimizerSetup.exe"
-        }
+            Write-Host "Found installer: $($installer.FullName)"
+            Write-Host "INSTALLER_PATH=$($installer.FullName)" >> $env:GITHUB_ENV
 
     # 🔹 Commit update.json changes
     - name: Commit update.json
@@ -99,7 +100,7 @@ jobs:
       with:
         tag_name: "v${{ env.VERSION }}"
         name: "Release OptimizerSetup v${{ env.VERSION }}"
-        files: publish/OptimizerSetup.exe
+        files: ${{ env.INSTALLER_PATH }}
         make_latest: true
         fail_on_unmatched_files: true
       env:
