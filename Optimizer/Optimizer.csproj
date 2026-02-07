@@ -34,6 +34,10 @@
     <Description>System Optimizer Tool</Description>
     <Version xmlns="">
     </Version>
+    <FileVersion xmlns="">
+    </FileVersion>
+    <AssemblyVersion xmlns="">
+    </AssemblyVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
