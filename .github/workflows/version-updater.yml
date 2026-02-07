@@ -48,23 +48,41 @@ jobs:
     - name: Update csproj version
       shell: pwsh
       run: |
-        $projectFile = Get-ChildItem -Recurse -Filter "*.csproj" | Select-Object -First 1 -ExpandProperty FullName
-        [xml]$csproj = Get-Content $projectFile
+          $projectFile = Get-ChildItem -Recurse -Filter "*.csproj" | Select-Object -First 1 -ExpandProperty FullName
+          [xml]$csproj = Get-Content $projectFile
 
-        # Pick the first PropertyGroup (or the one with Version)
-        $pg = $csproj.Project.PropertyGroup | Where-Object { $_.Version }
-        if (-not $pg) { $pg = $csproj.Project.PropertyGroup[0] }
+          # Find the first PropertyGroup that has a Version node
+          $pg = $csproj.Project.PropertyGroup | Where-Object { $_.Version } | Select-Object -First 1
 
-        # Create Version element if it doesn't exist
-        if (-not $pg.Version) {
-          $node = $csproj.CreateElement("Version")
-          $pg.AppendChild($node) | Out-Null
-        }
+          if (-not $pg) {
+          # If no Version node exists, create it
+          $pg = $csproj.Project.PropertyGroup[0]
+          $versionNode = $csproj.CreateElement("Version")
+          $pg.AppendChild($versionNode) | Out-Null
+          $pg = $pg  # reassign for innertext
+          $pg.Version = $versionNode
+          }
 
-        # Set Version
-        $pg.Version = $env:APP_VERSION
-        $csproj.Save($projectFile)
-        Write-Host "$projectFile version updated to $env:APP_VERSION"
+          # Set the InnerText of Version, FileVersion, and AssemblyVersion
+          $pg.Version.InnerText = $env:APP_VERSION
+
+          # Also update FileVersion and AssemblyVersion nodes if they exist
+          if (-not $pg.FileVersion) {
+          $fileNode = $csproj.CreateElement("FileVersion")
+          $pg.AppendChild($fileNode) | Out-Null
+          }
+          $pg.FileVersion.InnerText = $env:APP_VERSION
+
+          if (-not $pg.AssemblyVersion) {
+          $assemblyNode = $csproj.CreateElement("AssemblyVersion")
+          $pg.AppendChild($assemblyNode) | Out-Null
+          }
+          $pg.AssemblyVersion.InnerText = $env:APP_VERSION
+
+          # Save the csproj
+          $csproj.Save($projectFile)
+          Write-Host "$projectFile version updated to $env:APP_VERSION"
+
 
     # 4️⃣ Commit changes
     - name: Commit updated files
