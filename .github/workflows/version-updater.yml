@@ -20,7 +20,7 @@ jobs:
         $jsonPath = "update.json"
         if (-not (Test-Path $jsonPath)) { Write-Error "update.json not found!"; exit 1 }
         $json = Get-Content $jsonPath | ConvertFrom-Json
-        $version = $json.version
+        $version = 1.0.1
         if ([string]::IsNullOrWhiteSpace($version)) { Write-Error "Version is empty!"; exit 1 }
         Write-Host "APP_VERSION=$version" >> $env:GITHUB_ENV
 
@@ -31,7 +31,7 @@ jobs:
         $assemblyPath = "Optimizer/Properties/AssemblyInfo.cs"
         if (-not (Test-Path $assemblyPath)) { Write-Error "AssemblyInfo.cs not found!"; exit 1 }
 
-        $version = $env:APP_VERSION
+        $version = 1.0.1
         $content = Get-Content $assemblyPath -Raw
 
         # Replace AssemblyVersion and AssemblyFileVersion lines
