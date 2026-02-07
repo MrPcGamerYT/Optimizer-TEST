@@ -1,4 +1,4 @@
-name: Build and Release v1
+name: Build and Release v2
 
 on:
   push:
@@ -12,19 +12,19 @@ jobs:
       contents: write
 
     steps:
-    # 🔹 Checkout code
+    # 1️⃣ Checkout code
     - name: Checkout Code
       uses: actions/checkout@v4
 
-    # 🔹 Setup MSBuild
+    # 2️⃣ Setup MSBuild
     - name: Setup MSBuild
       uses: microsoft/setup-msbuild@v2
 
-    # 🔹 Setup NuGet
+    # 3️⃣ Setup NuGet
     - name: Setup NuGet
       uses: NuGet/setup-nuget@v1
 
-    # 🔹 Calculate version
+    # 4️⃣ Calculate version
     - name: Calculate Version
       id: version
       shell: pwsh
@@ -38,17 +38,18 @@ jobs:
         Write-Host "VERSION=$version" >> $env:GITHUB_ENV
         Write-Host "Calculated version: $version"
 
-    # 🔹 Update csproj version
+    # 5️⃣ Update csproj version (FileVersion, AssemblyVersion, Version)
     - name: Update csproj Version
       shell: pwsh
       run: |
         $projectFile = Get-ChildItem -Recurse -Filter "*.csproj" | Select-Object -First 1 -ExpandProperty FullName
         (Get-Content $projectFile) `
+          -replace '<AssemblyVersion>.*</AssemblyVersion>', "<AssemblyVersion>$env:VERSION</AssemblyVersion>" `
           -replace '<FileVersion>.*</FileVersion>', "<FileVersion>$env:VERSION</FileVersion>" `
           -replace '<Version>.*</Version>', "<Version>$env:VERSION</Version>" | Set-Content $projectFile
         Write-Host "Updated csproj to version $env:VERSION"
 
-    # 🔹 Update Inno Setup version
+    # 6️⃣ Update Inno Setup version
     - name: Update Inno Setup Version
       shell: pwsh
       run: |
@@ -73,21 +74,21 @@ jobs:
         $content | Set-Content $issFile -Encoding UTF8
         Write-Host "Updated installer version to $env:VERSION"
 
-    # 🔹 Build Project
+    # 7️⃣ Build project
     - name: Build Project
       shell: pwsh
       run: |
         $projectFile = Get-ChildItem -Recurse -Filter "*.csproj" | Select-Object -First 1 -ExpandProperty FullName
         nuget restore "$projectFile"
-        msbuild "$projectFile" /p:Configuration=Release /p:Platform="Any CPU" /p:OutputPath="${{ github.workspace }}\publish\"
+        msbuild "$projectFile" /p:Configuration=Release /p:Platform="Any CPU" /p:OutputPath="${{ github.workspace }}\publish\" /p:AssemblyVersion=$env:VERSION /p:FileVersion=$env:VERSION
 
-    # 🔹 Build Installer
+    # 8️⃣ Build installer
     - name: Build Installer
       uses: Minionguyjpro/Inno-Setup-Action@v1.2.2
       with:
         path: installer.iss
 
-    # 🔹 Copy Installer to workspace root
+    # 9️⃣ Copy installer to workspace root
     - name: Copy Installer for Release
       shell: pwsh
       run: |
@@ -95,9 +96,8 @@ jobs:
         if (-not $installer) { throw "OptimizerSetup.exe not found!" }
         Copy-Item $installer.FullName "${{ github.workspace }}/OptimizerSetup.exe" -Force
         Write-Host "INSTALLER_PATH=OptimizerSetup.exe" >> $env:GITHUB_ENV
-        Write-Host "Installer copied to workspace root"
 
-    # 🔹 Generate update.json
+    # 🔟 Generate update.json
     - name: Generate update.json
       shell: pwsh
       run: |
@@ -105,10 +105,10 @@ jobs:
             version = "$env:VERSION"
             url     = "https://github.com/${{ github.repository }}/releases/latest/download/OptimizerSetup.exe"
         } | ConvertTo-Json -Compress
-        $json | Set-Content -Path "${{ github.workspace }}/update.json" -Encoding UTF8
-        Write-Host "Generated update.json at workspace root: $json"
+        $json | Set-Content -Path update.json -Encoding UTF8
+        Write-Host "Generated update.json: $json"
 
-    # 🔹 Commit update.json
+    # 1️⃣1️⃣ Commit update.json
     - name: Commit update.json
       shell: pwsh
       run: |
@@ -118,7 +118,7 @@ jobs:
         git commit -m "Auto update update.json to $env:VERSION" || echo "No changes to commit"
         git push
 
-    # 🔹 Create GitHub Release
+    # 1️⃣2️⃣ Create GitHub release
     - name: Create Release
       uses: softprops/action-gh-release@v2
       with:
@@ -130,23 +130,15 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    # Delete old releases (keep latest)
+    # 1️⃣3️⃣ Delete old releases
     - name: Delete old releases
       shell: pwsh
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-       $tags = gh release list --json tagName,createdAt --jq 'sort_by(.createdAt) | reverse | .[1:] | .[].tagName'
-
-       if (-not [string]::IsNullOrEmpty($tags)) {
-        $tagsArray = $tags -split "`n"
-        foreach ($tag in $tagsArray) {
-            if (-not [string]::IsNullOrWhiteSpace($tag)) {
-                Write-Host "Deleting release: $tag"
-                gh release delete $tag -y --cleanup-tag
-            }
+        $tags = gh release list --json tagName,createdAt --jq 'sort_by(.createdAt) | reverse | .[1:] | .[].tagName'
+        if ($tags) {
+          foreach ($tag in $tags) {
+            gh release delete $tag -y --cleanup-tag
+          }
         }
-       } else {
-        Write-Host "No old releases to delete."
-       }
-
