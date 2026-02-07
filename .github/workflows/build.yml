@@ -72,11 +72,14 @@ jobs:
       with:
         path: installer.iss
 
-    # 🔹 Debug Installer Output
-    - name: Debug Installer Output
+    # 🔹 Locate Installer dynamically
+    - name: Locate Installer
       shell: pwsh
       run: |
-        Get-ChildItem -Recurse -Filter OptimizerSetup.exe
+        $installer = Get-ChildItem -Recurse -Filter "OptimizerSetup.exe" | Select-Object -First 1
+        if (-not $installer) { throw "OptimizerSetup.exe not found!" }
+        Write-Host "INSTALLER_PATH=$($installer.FullName)" >> $env:GITHUB_ENV
+        Write-Host "Found installer: $($installer.FullName)"
 
     # 🔹 Commit update.json
     - name: Commit update.json
@@ -94,7 +97,7 @@ jobs:
       with:
         tag_name: "v$env:VERSION"
         name: "Release OptimizerSetup v$env:VERSION"
-        files: publish/OptimizerSetup.exe
+        files: ${{ env.INSTALLER_PATH }}
         make_latest: true
         fail_on_unmatched_files: true
       env:
