@@ -19,5 +19,5 @@ assembly: AssemblyTitle("Optimizer")]
 [assembly: Guid("08e58f25-5dd2-42fe-833a-23ad7133b493")]
 
 // Version info
-[assembly: AssemblyVersion("")]
-[assembly: AssemblyFileVersion("")]
+[assembly: AssemblyVersion("1.0.1.82")]
+[assembly: AssemblyFileVersion("1.0.1.82")]
