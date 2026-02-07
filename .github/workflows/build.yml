@@ -49,28 +49,31 @@ jobs:
         Write-Host "Updated csproj to version $env:VERSION"
 
     # 🔹 Update Inno Setup version safely
-    - name: Update Inno Setup Version
-      shell: pwsh
-      run: |
-        $issFile = "installer.iss"
-        $content = Get-Content $issFile
+    # 🔹 Update Inno Setup Version safely (replace only)
+- name: Update Inno Setup Version
+  shell: pwsh
+  run: |
+    $issFile = "installer.iss"
+    $content = Get-Content $issFile
 
-        # Replace AppVersion (must exist)
-        if ($content -match '^AppVersion=.*') {
-            $content = $content -replace '^AppVersion=.*', "AppVersion=$env:VERSION"
-        } else {
-            throw "AppVersion line not found in installer.iss!"
-        }
+    # Replace AppVersion if exists, otherwise throw error
+    if ($content -match '^AppVersion=.*') {
+        $content = $content -replace '^AppVersion=.*', "AppVersion=$env:VERSION"
+    } else {
+        throw "AppVersion line not found in installer.iss!"
+    }
 
-        # Replace or add VersionInfoVersion
-        if ($content -match '^VersionInfoVersion=.*') {
-            $content = $content -replace '^VersionInfoVersion=.*', "VersionInfoVersion=$env:VERSION"
-        } else {
-            $content += "`nVersionInfoVersion=$env:VERSION"
-        }
+    # Replace VersionInfoVersion if exists
+    if ($content -match '^VersionInfoVersion=.*') {
+        $content = $content -replace '^VersionInfoVersion=.*', "VersionInfoVersion=$env:VERSION"
+    } else {
+        # Add at end if missing
+        $content += "`nVersionInfoVersion=$env:VERSION"
+    }
 
-        $content | Set-Content $issFile -Encoding UTF8
-        Write-Host "Updated installer version to $env:VERSION"
+    $content | Set-Content $issFile -Encoding UTF8
+    Write-Host "Updated installer version to $env:VERSION"
+
 
     # 🔹 Build project
     - name: Build Project
