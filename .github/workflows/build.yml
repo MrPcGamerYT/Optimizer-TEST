@@ -12,19 +12,15 @@ jobs:
       contents: write
 
     steps:
-    # 🔹 Checkout code
-    - name: Checkout Code
+    - name: Checkout code
       uses: actions/checkout@v4
 
-    # 🔹 Setup MSBuild
     - name: Setup MSBuild
       uses: microsoft/setup-msbuild@v2
 
-    # 🔹 Setup NuGet
     - name: Setup NuGet
       uses: NuGet/setup-nuget@v1
 
-    # 🧠 Generate version and update update.json
     - name: Generate version and update update.json
       shell: pwsh
       run: |
@@ -36,10 +32,9 @@ jobs:
         }
 
         $parts = $currentVersion.Split(".") | ForEach-Object {[int]$_}
-        $parts[2] += 1  # Increment patch
+        $parts[2] += 1
         $newVersion = "$($parts[0]).$($parts[1]).$($parts[2])"
         Write-Host "VERSION=$newVersion" >> $env:GITHUB_ENV
-        Write-Host "New version: $newVersion"
 
         $jsonObject = @{
             version = $newVersion
@@ -48,7 +43,6 @@ jobs:
         $jsonObject | ConvertTo-Json -Compress | Set-Content -Path update.json -Encoding UTF8
         Write-Host "update.json updated: $($jsonObject | ConvertTo-Json -Compress)"
 
-    # 🔹 Build Project with version override
     - name: Build Project
       shell: pwsh
       run: |
@@ -63,13 +57,12 @@ jobs:
           /p:AssemblyVersion=$env:VERSION `
           /p:InformationalVersion=$env:VERSION
 
-    # 🔹 Build Installer
     - name: Build Installer
       uses: Minionguyjpro/Inno-Setup-Action@v1.2.2
       with:
         path: installer.iss
+        working-directory: ${{ github.workspace }}
 
-    # 🔹 Verify installer exists
     - name: Locate Installer
       shell: pwsh
       run: |
@@ -82,7 +75,6 @@ jobs:
             Write-Host "INSTALLER_PATH=$($installer.FullName)" >> $env:GITHUB_ENV
         }
 
-    # 🔹 Commit update.json changes
     - name: Commit update.json
       shell: pwsh
       run: |
@@ -92,7 +84,6 @@ jobs:
         git commit -m "Auto-update update.json to $env:VERSION" || echo "No changes"
         git push
 
-    # 🚀 Create GitHub Release
     - name: Create Release
       uses: softprops/action-gh-release@v2
       with:
@@ -104,7 +95,6 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    # 🧹 Delete old releases (keep latest)
     - name: Delete old releases
       shell: pwsh
       env:
