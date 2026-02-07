@@ -16,59 +16,6 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v4
 
-    - name: Sync AssemblyInfo version with update.json
-      shell: pwsh
-      run: |
-          $assemblyFile = "Optimizer/Optimizer.csproj"
-          Write-Host "Updating AssemblyInfo.cs with version $env:VERSION"
-
-          # Replace AssemblyVersion and AssemblyFileVersion
-          (Get-Content $assemblyFile) `
-          -replace 'AssemblyVersion\(".*"\)', "AssemblyVersion(`"$env:VERSION`")" `
-          -replace 'AssemblyFileVersion\(".*"\)', "AssemblyFileVersion(`"$env:VERSION`")" `
-          | Set-Content $assemblyFile
-
-
-    # 🔹 Setup MSBuild
-    - name: Setup MSBuild
-      uses: microsoft/setup-msbuild@v2
-
-    # 🔹 Setup NuGet
-    - name: Setup NuGet
-      uses: NuGet/setup-nuget@v1
-
-    # 🔹 Build Project with synced version
-    - name: Build Project
-      shell: pwsh
-      run: |
-        $projectFile = Get-ChildItem -Recurse -Filter "*.csproj" | Select-Object -First 1 -ExpandProperty FullName
-    
-        # Update csproj version with the updater.json version
-        [xml]$csproj = Get-Content $projectFile
-        $csproj.Project.PropertyGroup.Version = $env:VERSION
-        $csproj.Project.PropertyGroup.FileVersion = $env:VERSION
-        $csproj.Project.PropertyGroup.AssemblyVersion = $env:VERSION
-        $csproj.Save($projectFile)
-    
-        # Restore NuGet packages
-        nuget restore $projectFile
-
-        # Build EXE
-        msbuild $projectFile /p:Configuration=Release /p:Platform="Any CPU" /p:OutputPath="${{ github.workspace }}\publish\"
-
-
-    # 🔹 Build Installer
-    - name: Build Installer
-      uses: Minionguyjpro/Inno-Setup-Action@v1.2.2
-      with:
-        path: installer.iss
-
-    # 🔹 Debug Installer Output
-    - name: Debug Installer Output
-      shell: pwsh
-      run: |
-        Get-ChildItem -Recurse -Filter OptimizerSetup.exe
-
     # 🧠 Generate updater.json & VERSION
     - name: Generate updater.json
       shell: pwsh
@@ -90,6 +37,57 @@ jobs:
         $json | Set-Content -Path update.json -Encoding UTF8
         Write-Host "Generated update.json: $json"
 
+    # 🔹 Update csproj version with update.json version
+    - name: Sync csproj version with update.json
+      shell: pwsh
+      run: |
+        $projectFile = Get-ChildItem -Recurse -Filter "*.csproj" | Select-Object -First 1 -ExpandProperty FullName
+        Write-Host "Updating csproj version: $projectFile"
+
+        [xml]$csproj = Get-Content $projectFile
+        $pg = $csproj.Project.PropertyGroup | Select-Object -First 1
+
+        # Create nodes if they don't exist
+        if (-not $pg.Version) { $pg.AppendChild($csproj.CreateElement("Version")) | Out-Null }
+        if (-not $pg.FileVersion) { $pg.AppendChild($csproj.CreateElement("FileVersion")) | Out-Null }
+        if (-not $pg.AssemblyVersion) { $pg.AppendChild($csproj.CreateElement("AssemblyVersion")) | Out-Null }
+
+        # Set version values
+        $pg.Version = $env:VERSION
+        $pg.FileVersion = $env:VERSION
+        $pg.AssemblyVersion = $env:VERSION
+
+        $csproj.Save($projectFile)
+        Write-Host "csproj version updated to $env:VERSION"
+
+    # 🔹 Setup MSBuild
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v2
+
+    # 🔹 Setup NuGet
+    - name: Setup NuGet
+      uses: NuGet/setup-nuget@v1
+
+    # 🔹 Build Project
+    - name: Build Project
+      shell: pwsh
+      run: |
+        $projectFile = Get-ChildItem -Recurse -Filter "*.csproj" | Select-Object -First 1 -ExpandProperty FullName
+        nuget restore $projectFile
+        msbuild $projectFile /p:Configuration=Release /p:Platform="Any CPU" /p:OutputPath="${{ github.workspace }}\publish\"
+
+    # 🔹 Build Installer
+    - name: Build Installer
+      uses: Minionguyjpro/Inno-Setup-Action@v1.2.2
+      with:
+        path: installer.iss
+
+    # 🔹 Debug Installer Output
+    - name: Debug Installer Output
+      shell: pwsh
+      run: |
+        Get-ChildItem -Recurse -Filter OptimizerSetup.exe
+
     # 🔹 Commit updater.json changes
     - name: Commit updater.json
       shell: pwsh
@@ -104,8 +102,8 @@ jobs:
     - name: Create Release
       uses: softprops/action-gh-release@v2
       with:
-        tag_name: Optimizer
-        name: Release OptimizerSetup
+        tag_name: ${{ env.VERSION }}
+        name: Release OptimizerSetup ${{ env.VERSION }}
         files: setup_output/OptimizerSetup.exe
         make_latest: true
         fail_on_unmatched_files: true
@@ -126,4 +124,3 @@ jobs:
           }
         } else {
           Write-Host "No old releases to delete."
-        }
