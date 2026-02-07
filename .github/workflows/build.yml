@@ -12,7 +12,7 @@ jobs:
       contents: write
 
     steps:
-    # 🔹 Checkout code
+    # 🔹 Checkout repo
     - name: Checkout Code
       uses: actions/checkout@v4
 
@@ -37,28 +37,24 @@ jobs:
         $json | Set-Content -Path update.json -Encoding UTF8
         Write-Host "Generated update.json: $json"
 
-    # 🔹 Update csproj version with update.json version
-    - name: Sync csproj version with update.json
+    # 🔹 Update AssemblyInfo.cs with update.json version
+    - name: Sync AssemblyInfo.cs version
       shell: pwsh
       run: |
-        $projectFile = Get-ChildItem -Recurse -Filter "*.csproj" | Select-Object -First 1 -ExpandProperty FullName
-        Write-Host "Updating csproj version: $projectFile"
+        $assemblyFile = "Optimizer/Properties/AssemblyInfo.cs"
+        Write-Host "Updating AssemblyInfo.cs with version $env:VERSION"
 
-        [xml]$csproj = Get-Content $projectFile
-        $pg = $csproj.Project.PropertyGroup | Select-Object -First 1
+        if (-Not (Test-Path $assemblyFile)) {
+          Write-Error "AssemblyInfo.cs not found at $assemblyFile"
+          exit 1
+        }
 
-        # Create nodes if they don't exist
-        if (-not $pg.Version) { $pg.AppendChild($csproj.CreateElement("Version")) | Out-Null }
-        if (-not $pg.FileVersion) { $pg.AppendChild($csproj.CreateElement("FileVersion")) | Out-Null }
-        if (-not $pg.AssemblyVersion) { $pg.AppendChild($csproj.CreateElement("AssemblyVersion")) | Out-Null }
+        (Get-Content $assemblyFile) `
+          -replace 'AssemblyVersion\(".*"\)', "AssemblyVersion(`"$env:VERSION`")" `
+          -replace 'AssemblyFileVersion\(".*"\)', "AssemblyFileVersion(`"$env:VERSION`")" `
+          | Set-Content $assemblyFile
 
-        # Set version values
-        $pg.Version = $env:VERSION
-        $pg.FileVersion = $env:VERSION
-        $pg.AssemblyVersion = $env:VERSION
-
-        $csproj.Save($projectFile)
-        Write-Host "csproj version updated to $env:VERSION"
+        Write-Host "AssemblyInfo.cs updated to version $env:VERSION"
 
     # 🔹 Setup MSBuild
     - name: Setup MSBuild
