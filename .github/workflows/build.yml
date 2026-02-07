@@ -66,11 +66,22 @@ jobs:
           /p:AssemblyVersion=$env:VERSION `
           /p:InformationalVersion=$env:VERSION
 
-    # 🔹 Build Installer (output to publish/)
+    # 🔹 Build Installer (make sure installer.iss sets OutputDir={src}\publish)
     - name: Build Installer
       uses: Minionguyjpro/Inno-Setup-Action@v1.2.2
       with:
         path: installer.iss
+
+    # 🔹 Verify installer exists
+    - name: Verify Installer
+      shell: pwsh
+      run: |
+        if (-not (Test-Path "publish/OptimizerSetup.exe")) {
+            Write-Host "Error: OptimizerSetup.exe not found!"
+            exit 1
+        } else {
+            Write-Host "Installer found: publish/OptimizerSetup.exe"
+        }
 
     # 🔹 Commit update.json changes
     - name: Commit update.json
