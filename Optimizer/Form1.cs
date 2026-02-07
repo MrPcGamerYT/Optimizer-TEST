@@ -481,413 +481,477 @@ namespace Optimizer
         // Fast + no-duplicate game list
         private HashSet<string> gameExecutablesSet;
 
-        private async void NormalGameModeLoop()
-{
-    while (normalGameModeRunning)
-    {
-        bool found = false;
-
-        foreach (string game in gameExecutablesSet)
-        {
-            Process[] p = Process.GetProcessesByName(game);
-            if (p.Length > 0)
-            {
-                found = true;
-
-                if (currentGame != game)
-                {
-                    currentGame = game;
-                    ApplyNormalGameBoost(p[0]);
-                    // ❌ Removed UI update here for Normal Game Mode
-                }
-                break;
-            }
-        }
-
-        if (!found && currentGame != null)
-        {
-            currentGame = null;
-            // ❌ Removed UI update here for Normal Game Mode
-        }
-
-        await Task.Delay(3500);
-    }
-}
-
-private void ApplyNormalGameBoost(Process game)
-{
-    try
-    {
-        // ✅ Safe priority for the game
-        game.PriorityClass = ProcessPriorityClass.AboveNormal;
-
-        foreach (Process p in Process.GetProcesses())
+        // ===============================
+        // GAME BOOST UTILS
+        // ===============================
+        private void ApplyGameBoost(Process game, bool isAdvancedMode)
         {
             try
             {
-                // 🔒 Skip protected processes
-                if (IsProtectedProcess(p))
-                    continue;
+                // ✅ Boost the game itself
+                game.PriorityClass = ProcessPriorityClass.AboveNormal;
 
-                // ❌ Never touch the active game
-                if (p.Id == game.Id)
-                    continue;
-
-                // ⬇ Lower background apps safely
-                p.PriorityClass = ProcessPriorityClass.BelowNormal;
-            }
-            catch
-            {
-                // ignore access denied processes
-            }
-        }
-    }
-    catch
-    {
-        // ignore game access errors
-    }
-}
-
-// ===============================
-// EMULATOR GAME MODE
-// ===============================
-private readonly string[] emulatorProcesses =
-{
-    "HD-Player",        // BlueStacks / MSI App Player
-    "dnplayer",         // LDPlayer
-    "Nox",
-    "MEmu",
-    "AndroidEmulator"  // GameLoop
-};
-
-private bool emulatorBoostRunning = false;
-
-private async Task EmulatorBoostLoopAsync()
-{
-    while (emulatorBoostRunning)
-    {
-        bool foundEmulator = false;
-
-        foreach (string emu in emulatorProcesses)
-        {
-            if (Process.GetProcessesByName(emu).Length > 0)
-            {
-                foundEmulator = true;
-
-                this.Invoke((Action)(() =>
+                foreach (Process p in Process.GetProcesses())
                 {
-                    lblGameModeStatus.Text = $"Advanced Emulator Mode: {emu} Detected 🚀";
-                    lblGameModeStatus.ForeColor = Color.Lime;
-                }));
-
-                break;
-            }
-        }
-
-        if (!foundEmulator)
-        {
-            this.Invoke((Action)(() =>
-            {
-                lblGameModeStatus.Text = "Advanced Emulator Mode: Waiting for Emulator…";
-                lblGameModeStatus.ForeColor = Color.DeepSkyBlue;
-            }));
-        }
-
-        await Task.Delay(3000); // Check every 3 seconds
-    }
-
-    this.Invoke((Action)(() =>
-    {
-        lblGameModeStatus.Text = "Advanced Emulator Mode: DISABLED";
-        lblGameModeStatus.ForeColor = Color.Orange;
-    }));
-}
-
-private void UpdateEmulatorStatus()
-{
-    if (!tgAdvancedGame.Checked || !advancedGameModeRunning)
-        return;
-
-    foreach (string game in gameExecutablesSet)
-    {
-        if (Process.GetProcessesByName(game).Length > 0)
-        {
-            lblGameModeStatus.Text = $"Game Mode Applied On {game}";
-            lblGameModeStatus.ForeColor = Color.Lime;
-            return;
-        }
-    }
-
-    lblGameModeStatus.Text = "Waiting for Game…";
-    lblGameModeStatus.ForeColor = Color.Orange;
-}
-
-private void EnableAdvancedGameMode()
-{
-    try
-    {
-        // 1️⃣ Switch to Ultimate Performance (Windows 10/11 Pro+)
-        try
-        {
-            Process.Start(new ProcessStartInfo
-            {
-                FileName = "powercfg",
-                Arguments = "-setactive e9a42b02-d5df-448d-aa00-03f14749eb61",
-                CreateNoWindow = true,
-                UseShellExecute = false
-            });
-        }
-        catch { }
-
-        // 2️⃣ Disable CPU Power Throttling (system-wide)
-        try
-        {
-            Registry.SetValue(
-                @"HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Power\PowerThrottling",
-                "PowerThrottlingOff",
-                1,
-                RegistryValueKind.DWord
-            );
-        }
-        catch { }
-
-        // 3️⃣ Reduce visual effects (Best performance)
-        try
-        {
-            Registry.SetValue(
-                @"HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects",
-                "VisualFXSetting",
-                2, // 2 = Best performance
-                RegistryValueKind.DWord
-            );
-        }
-        catch { }
-    }
-    catch { }
-}
-
-private void DisableAdvancedGameMode()
-{
-    try
-    {
-        // 🔁 Restore Balanced power plan
-        try
-        {
-            Process.Start(new ProcessStartInfo
-            {
-                FileName = "powercfg",
-                Arguments = "-setactive 381b4222-f694-41f0-9685-ff5bb260df2e",
-                CreateNoWindow = true,
-                UseShellExecute = false
-            });
-        }
-        catch { }
-
-        // 🔁 Re-enable CPU Power Throttling
-        try
-        {
-            Registry.SetValue(
-                @"HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Power\PowerThrottling",
-                "PowerThrottlingOff",
-                0,
-                RegistryValueKind.DWord
-            );
-        }
-        catch { }
-
-        // 🔁 Restore visual effects to Windows default
-        try
-        {
-            Registry.SetValue(
-                @"HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects",
-                "VisualFXSetting",
-                1, // 1 = Let Windows decide
-                RegistryValueKind.DWord
-            );
-        }
-        catch { }
-    }
-    catch { }
-}
-
-// ======== TOGGLE NORMAL GAME MODE ========
-private void tgNormalGame_CheckedChanged(object sender, EventArgs e)
-{
-    if (tgNormalGame.Checked && tgAdvancedGame.Checked)
-        tgAdvancedGame.Checked = false;
-
-    if (tgNormalGame.Checked)
-    {
-        tgAdvancedEmulator.Checked = false;
-
-        normalGameModeRunning = true;
-        currentGame = null;
-
-        Task.Run(() => NormalGameModeLoop());
-
-        lblGameModeStatus.Text = "Normal Game Mode: ENABLED";
-        lblGameModeStatus.ForeColor = Color.DeepSkyBlue;
-    }
-    else
-    {
-        normalGameModeRunning = false;
-        currentGame = null;
-
-        lblGameModeStatus.Text = "Normal Game Mode: DISABLED";
-        lblGameModeStatus.ForeColor = Color.Orange;
-    }
-
-    UpdateTrayBlinkState();
-}
-
-// ======== TOGGLE ADVANCED GAME MODE ========
-private void tgAdvancedGame_CheckedChanged(object sender, EventArgs e)
-{
-    if (tgAdvancedGame.Checked && tgNormalGame.Checked)
-        tgNormalGame.Checked = false;
-
-    if (tgAdvancedGame.Checked)
-    {
-        tgAdvancedEmulator.Checked = false;
-
-        advancedGameModeRunning = true;
-        EnableAdvancedGameMode();
-
-        // Now detect running game and update label for Advanced Game Mode
-        UpdateEmulatorStatus();
-    }
-    else
-    {
-        advancedGameModeRunning = false;
-        DisableAdvancedGameMode();
-
-        if (!tgAdvancedEmulator.Checked)
-        {
-            lblGameModeStatus.Text = "Advanced Game Mode: DISABLED";
-            lblGameModeStatus.ForeColor = Color.Orange;
-        }
-    }
-
-    UpdateTrayBlinkState();
-}
-
-// ======== TRAY BLINK & STATUS ========
-private void UpdateTrayBlinkState()
-{
-    bool shouldBlink =
-        emulatorBoostRunning ||
-        normalGameModeRunning ||
-        advancedGameModeRunning ||
-        bgAppBoostRunning;
-
-    if (tgAdvancedEmulator.Checked)
-        trayIcon.Text = "Advanced Emulator Mode ACTIVE 🕹";
-    else if (tgAdvancedGame.Checked)
-        trayIcon.Text = "Advanced Game Mode ACTIVE 🚀";
-    else if (tgNormalGame.Checked)
-        trayIcon.Text = "Normal Game Mode ACTIVE 🎮";
-    else
-        trayIcon.Text = "Game Mode OFF";
-
-    if (shouldBlink)
-    {
-        trayIcon.Visible = true;
-        StartTrayBlink();
-    }
-    else
-    {
-        StopTrayBlink();
-        trayIcon.Visible = false;
-    }
-}
-
-// ======== BACKGROUND APP BOOST ========
-private void tgBgApps_CheckedChanged(object sender, EventArgs e)
-{
-    if (tgBgApps.Checked)
-    {
-        if (!bgAppBoostRunning)
-        {
-            bgAppBoostRunning = true;
-            Task.Run(() => BackgroundAppsBoostLoop());
-        }
-
-        lblGameModeStatus.Text = "Background Apps Disabled";
-        lblGameModeStatus.ForeColor = Color.DeepSkyBlue;
-    }
-    else
-    {
-        bgAppBoostRunning = false;
-
-        lblGameModeStatus.Text = "Background Apps Restored";
-        lblGameModeStatus.ForeColor = Color.Orange;
-    }
-}
-
-private void BackgroundAppsBoostLoop()
-{
-    while (bgAppBoostRunning)
-    {
-        Process[] processes = Process.GetProcesses();
-
-        foreach (Process p in processes)
-        {
-            try
-            {
-                if (p.HasExited)
-                    continue;
-
-                if (IsProtectedProcess(p))
-                    continue;
-
-                if (currentGame != null &&
-                    p.ProcessName.Equals(currentGame, StringComparison.OrdinalIgnoreCase))
-                    continue;
-
-                bool isEmulator = false;
-                foreach (string emu in emulatorProcesses)
-                {
-                    if (p.ProcessName.Equals(emu, StringComparison.OrdinalIgnoreCase))
+                    try
                     {
-                        isEmulator = true;
-                        break;
+                        if (p.HasExited)
+                            continue;
+
+                        // 🔒 Skip protected/system processes
+                        if (IsProtectedProcess(p))
+                            continue;
+
+                        // ❌ Skip active game
+                        if (p.Id == game.Id)
+                            continue;
+
+                        // ⬇ Lower background safely
+                        if (p.PriorityClass != ProcessPriorityClass.BelowNormal)
+                            p.PriorityClass = ProcessPriorityClass.BelowNormal;
                     }
+                    catch { }
                 }
 
-                if (isEmulator)
-                    continue;
-
-                if (p.PriorityClass != ProcessPriorityClass.BelowNormal)
-                    p.PriorityClass = ProcessPriorityClass.BelowNormal;
+                // 🔔 Update UI only for Advanced Mode
+                if (isAdvancedMode)
+                {
+                    this.Invoke((Action)(() =>
+                    {
+                        lblGameModeStatus.Text = $"Game Mode Applied On {game.ProcessName}";
+                        lblGameModeStatus.ForeColor = Color.Lime;
+                    }));
+                }
             }
             catch { }
         }
 
-        Thread.Sleep(4000);
-    }
-}
+        // ===============================
+        // NORMAL GAME MODE
+        // ===============================
 
-// ======== TOGGLE ADVANCED EMULATOR MODE ========
-private void tgAdvancedEmulator_CheckedChanged(object sender, EventArgs e)
-{
-    if (tgAdvancedEmulator.Checked)
-    {
-        tgAdvancedGame.Checked = false;
-        tgNormalGame.Checked = false;
 
-        if (!emulatorBoostRunning)
+        private async void NormalGameModeLoop()
         {
-            emulatorBoostRunning = true;
-            Task.Run(() => EmulatorBoostLoopAsync());
-        }
-    }
-    else
-    {
-        emulatorBoostRunning = false;
-    }
+            while (normalGameModeRunning)
+            {
+                bool found = false;
 
-    UpdateTrayBlinkState();
-}
+                foreach (string game in gameExecutablesSet)
+                {
+                    Process[] p = Process.GetProcessesByName(game);
+                    if (p.Length > 0)
+                    {
+                        found = true;
+
+                        if (currentGame != game)
+                        {
+                            currentGame = game;
+                            ApplyGameBoost(p[0], false); // Normal Mode does NOT update UI
+                        }
+                        break;
+                    }
+                }
+
+                if (!found)
+                    currentGame = null;
+
+                await Task.Delay(3500);
+            }
+        }
+
+        // ===============================
+        // ADVANCED GAME MODE
+        // ===============================
+
+
+        private async void AdvancedGameModeLoop()
+        {
+            while (advancedGameModeRunning)
+            {
+                bool found = false;
+
+                foreach (string game in gameExecutablesSet)
+                {
+                    Process[] p = Process.GetProcessesByName(game);
+                    if (p.Length > 0)
+                    {
+                        found = true;
+
+                        if (currentGame != game)
+                        {
+                            currentGame = game;
+                            ApplyGameBoost(p[0], true); // Advanced Mode updates UI
+                        }
+                        break;
+                    }
+                }
+
+                if (!found)
+                {
+                    this.Invoke((Action)(() =>
+                    {
+                        lblGameModeStatus.Text = "Advanced Game Mode: Waiting for Game…";
+                        lblGameModeStatus.ForeColor = Color.DeepSkyBlue;
+                    }));
+
+                    currentGame = null;
+                }
+
+                await Task.Delay(2000); // faster updates for Advanced Mode
+            }
+
+            // Reset UI when disabled
+            this.Invoke((Action)(() =>
+            {
+                lblGameModeStatus.Text = "Advanced Game Mode: DISABLED";
+                lblGameModeStatus.ForeColor = Color.Orange;
+            }));
+        }
+
+        // ===============================
+        // EMULATOR BOOST MODE
+        // ===============================
+        private readonly string[] emulatorProcesses =
+        {
+    "HD-Player",        // BlueStacks / MSI App Player
+    "dnplayer",         // LDPlayer
+    "Nox",
+    "MEmu",
+    "AndroidEmulator"   // GameLoop
+};
+
+        private bool emulatorBoostRunning = false;
+
+        private void UpdateEmulatorStatus()
+        {
+            if (!tgAdvancedGame.Checked || !advancedGameModeRunning)
+                return;
+
+            foreach (string game in gameExecutablesSet)
+            {
+                if (Process.GetProcessesByName(game).Length > 0)
+                {
+                    lblGameModeStatus.Text = $"Game Mode Applied On {game}";
+                    lblGameModeStatus.ForeColor = Color.Lime;
+                    return;
+                }
+            }
+
+            lblGameModeStatus.Text = "Waiting for Game…";
+            lblGameModeStatus.ForeColor = Color.Orange;
+        }
+
+        private async Task EmulatorBoostLoopAsync()
+        {
+            while (emulatorBoostRunning)
+            {
+                bool foundEmulator = false;
+
+                foreach (string emu in emulatorProcesses)
+                {
+                    if (Process.GetProcessesByName(emu).Length > 0)
+                    {
+                        foundEmulator = true;
+
+                        this.Invoke((Action)(() =>
+                        {
+                            lblGameModeStatus.Text = $"Advanced Emulator Mode: {emu} Detected 🚀";
+                            lblGameModeStatus.ForeColor = Color.Lime;
+                        }));
+
+                        break;
+                    }
+                }
+
+                if (!foundEmulator)
+                {
+                    this.Invoke((Action)(() =>
+                    {
+                        lblGameModeStatus.Text = "Advanced Emulator Mode: Waiting for Emulator…";
+                        lblGameModeStatus.ForeColor = Color.DeepSkyBlue;
+                    }));
+                }
+
+                await Task.Delay(3000);
+            }
+
+            this.Invoke((Action)(() =>
+            {
+                lblGameModeStatus.Text = "Advanced Emulator Mode: DISABLED";
+                lblGameModeStatus.ForeColor = Color.Orange;
+            }));
+        }
+
+        // ===============================
+        // ENABLE/DISABLE ADVANCED GAME MODE
+        // ===============================
+        private void EnableAdvancedGameMode()
+        {
+            try
+            {
+                // 1️⃣ Switch to Ultimate Performance
+                try
+                {
+                    Process.Start(new ProcessStartInfo
+                    {
+                        FileName = "powercfg",
+                        Arguments = "-setactive e9a42b02-d5df-448d-aa00-03f14749eb61",
+                        CreateNoWindow = true,
+                        UseShellExecute = false
+                    });
+                }
+                catch { }
+
+                // 2️⃣ Disable CPU Power Throttling
+                try
+                {
+                    Registry.SetValue(
+                        @"HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Power\PowerThrottling",
+                        "PowerThrottlingOff",
+                        1,
+                        RegistryValueKind.DWord
+                    );
+                }
+                catch { }
+
+                // 3️⃣ Reduce visual effects
+                try
+                {
+                    Registry.SetValue(
+                        @"HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects",
+                        "VisualFXSetting",
+                        2, // Best performance
+                        RegistryValueKind.DWord
+                    );
+                }
+                catch { }
+            }
+            catch { }
+        }
+
+        private void DisableAdvancedGameMode()
+        {
+            try
+            {
+                // Restore Balanced power plan
+                try
+                {
+                    Process.Start(new ProcessStartInfo
+                    {
+                        FileName = "powercfg",
+                        Arguments = "-setactive 381b4222-f694-41f0-9685-ff5bb260df2e",
+                        CreateNoWindow = true,
+                        UseShellExecute = false
+                    });
+                }
+                catch { }
+
+                // Re-enable CPU Power Throttling
+                try
+                {
+                    Registry.SetValue(
+                        @"HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Power\PowerThrottling",
+                        "PowerThrottlingOff",
+                        0,
+                        RegistryValueKind.DWord
+                    );
+                }
+                catch { }
+
+                // Restore visual effects to Windows default
+                try
+                {
+                    Registry.SetValue(
+                        @"HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects",
+                        "VisualFXSetting",
+                        1,
+                        RegistryValueKind.DWord
+                    );
+                }
+                catch { }
+            }
+            catch { }
+        }
+
+        // ===============================
+        // BACKGROUND APPS BOOST
+        // ===============================
+
+
+        private void BackgroundAppsBoostLoop()
+        {
+            while (bgAppBoostRunning)
+            {
+                Process[] processes = Process.GetProcesses();
+
+                foreach (Process p in processes)
+                {
+                    try
+                    {
+                        if (p.HasExited)
+                            continue;
+
+                        if (IsProtectedProcess(p))
+                            continue;
+
+                        if (currentGame != null &&
+                            p.ProcessName.Equals(currentGame, StringComparison.OrdinalIgnoreCase))
+                            continue;
+
+                        bool isEmulator = false;
+                        foreach (string emu in emulatorProcesses)
+                        {
+                            if (p.ProcessName.Equals(emu, StringComparison.OrdinalIgnoreCase))
+                            {
+                                isEmulator = true;
+                                break;
+                            }
+                        }
+
+                        if (isEmulator)
+                            continue;
+
+                        if (p.PriorityClass != ProcessPriorityClass.BelowNormal)
+                            p.PriorityClass = ProcessPriorityClass.BelowNormal;
+                    }
+                    catch { }
+                }
+
+                Thread.Sleep(4000);
+            }
+        }
+
+        // ===============================
+        // TOGGLE HANDLERS
+        // ===============================
+        private void tgNormalGame_CheckedChanged(object sender, EventArgs e)
+        {
+            if (tgNormalGame.Checked && tgAdvancedGame.Checked)
+                tgAdvancedGame.Checked = false;
+
+            if (tgNormalGame.Checked)
+            {
+                tgAdvancedEmulator.Checked = false;
+
+                normalGameModeRunning = true;
+                currentGame = null;
+
+                Task.Run(() => NormalGameModeLoop());
+
+                lblGameModeStatus.Text = "Normal Game Mode: ENABLED";
+                lblGameModeStatus.ForeColor = Color.DeepSkyBlue;
+            }
+            else
+            {
+                normalGameModeRunning = false;
+                currentGame = null;
+
+                lblGameModeStatus.Text = "Normal Game Mode: DISABLED";
+                lblGameModeStatus.ForeColor = Color.Orange;
+            }
+
+            UpdateTrayBlinkState();
+        }
+
+        private void tgAdvancedGame_CheckedChanged(object sender, EventArgs e)
+        {
+            if (tgAdvancedGame.Checked && tgNormalGame.Checked)
+                tgNormalGame.Checked = false;
+
+            if (tgAdvancedGame.Checked)
+            {
+                tgAdvancedEmulator.Checked = false;
+
+                advancedGameModeRunning = true;
+                EnableAdvancedGameMode();
+
+                Task.Run(() => AdvancedGameModeLoop());
+            }
+            else
+            {
+                advancedGameModeRunning = false;
+                DisableAdvancedGameMode();
+            }
+
+            UpdateTrayBlinkState();
+        }
+
+        private void tgAdvancedEmulator_CheckedChanged(object sender, EventArgs e)
+        {
+            if (tgAdvancedEmulator.Checked)
+            {
+                tgAdvancedGame.Checked = false;
+                tgNormalGame.Checked = false;
+
+                if (!emulatorBoostRunning)
+                {
+                    emulatorBoostRunning = true;
+                    Task.Run(() => EmulatorBoostLoopAsync());
+                }
+            }
+            else
+            {
+                emulatorBoostRunning = false;
+            }
+
+            UpdateTrayBlinkState();
+        }
+
+        private void tgBgApps_CheckedChanged(object sender, EventArgs e)
+        {
+            if (tgBgApps.Checked)
+            {
+                if (!bgAppBoostRunning)
+                {
+                    bgAppBoostRunning = true;
+                    Task.Run(() => BackgroundAppsBoostLoop());
+                }
+
+                lblGameModeStatus.Text = "Background Apps Disabled";
+                lblGameModeStatus.ForeColor = Color.DeepSkyBlue;
+            }
+            else
+            {
+                bgAppBoostRunning = false;
+
+                lblGameModeStatus.Text = "Background Apps Restored";
+                lblGameModeStatus.ForeColor = Color.Orange;
+            }
+        }
+
+        // ===============================
+        // TRAY ICON & BLINK STATE
+        // ===============================
+        private void UpdateTrayBlinkState()
+        {
+            bool shouldBlink =
+                emulatorBoostRunning ||
+                normalGameModeRunning ||
+                advancedGameModeRunning ||
+                bgAppBoostRunning;
+
+            if (tgAdvancedEmulator.Checked)
+                trayIcon.Text = "Advanced Emulator Mode ACTIVE 🕹";
+            else if (tgAdvancedGame.Checked)
+                trayIcon.Text = "Advanced Game Mode ACTIVE 🚀";
+            else if (tgNormalGame.Checked)
+                trayIcon.Text = "Normal Game Mode ACTIVE 🎮";
+            else
+                trayIcon.Text = "Game Mode OFF";
+
+            if (shouldBlink)
+            {
+                trayIcon.Visible = true;
+                StartTrayBlink();
+            }
+            else
+            {
+                StopTrayBlink();
+                trayIcon.Visible = false;
+            }
+        }
+
 
 
 
