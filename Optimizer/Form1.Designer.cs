@@ -96,6 +96,8 @@ namespace Optimizer
             this.pingBar = new Guna.UI2.WinForms.Guna2CircleProgressBar();
             this.lblPing = new System.Windows.Forms.Label();
             this.guna2Panel5 = new Guna.UI2.WinForms.Guna2Panel();
+            this.tgAdvancedEmulator = new Guna.UI2.WinForms.Guna2ToggleSwitch();
+            this.label9 = new System.Windows.Forms.Label();
             this.tgBgApps = new Guna.UI2.WinForms.Guna2ToggleSwitch();
             this.label8 = new System.Windows.Forms.Label();
             this.label6 = new System.Windows.Forms.Label();
@@ -1173,6 +1175,7 @@ namespace Optimizer
             this.gamemodpnl.Name = "gamemodpnl";
             this.gamemodpnl.Size = new System.Drawing.Size(718, 299);
             this.gamemodpnl.TabIndex = 14;
+            this.gamemodpnl.Paint += new System.Windows.Forms.PaintEventHandler(this.gamemodpnl_Paint);
             // 
             // label24
             // 
@@ -1222,6 +1225,8 @@ namespace Optimizer
             this.guna2Panel5.BorderColor = System.Drawing.Color.White;
             this.guna2Panel5.BorderRadius = 10;
             this.guna2Panel5.BorderThickness = 1;
+            this.guna2Panel5.Controls.Add(this.tgAdvancedEmulator);
+            this.guna2Panel5.Controls.Add(this.label9);
             this.guna2Panel5.Controls.Add(this.tgBgApps);
             this.guna2Panel5.Controls.Add(this.label8);
             this.guna2Panel5.Controls.Add(this.label6);
@@ -1237,13 +1242,43 @@ namespace Optimizer
             this.guna2Panel5.Size = new System.Drawing.Size(346, 269);
             this.guna2Panel5.TabIndex = 21;
             // 
+            // tgAdvancedEmulator
+            // 
+            this.tgAdvancedEmulator.CheckedState.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(94)))), ((int)(((byte)(148)))), ((int)(((byte)(255)))));
+            this.tgAdvancedEmulator.CheckedState.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(94)))), ((int)(((byte)(148)))), ((int)(((byte)(255)))));
+            this.tgAdvancedEmulator.CheckedState.InnerBorderColor = System.Drawing.Color.White;
+            this.tgAdvancedEmulator.CheckedState.InnerColor = System.Drawing.Color.White;
+            this.tgAdvancedEmulator.Location = new System.Drawing.Point(302, 131);
+            this.tgAdvancedEmulator.Name = "tgAdvancedEmulator";
+            this.tgAdvancedEmulator.Size = new System.Drawing.Size(35, 20);
+            this.tgAdvancedEmulator.TabIndex = 24;
+            this.tgAdvancedEmulator.UncheckedState.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(125)))), ((int)(((byte)(137)))), ((int)(((byte)(149)))));
+            this.tgAdvancedEmulator.UncheckedState.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(125)))), ((int)(((byte)(137)))), ((int)(((byte)(149)))));
+            this.tgAdvancedEmulator.UncheckedState.InnerBorderColor = System.Drawing.Color.White;
+            this.tgAdvancedEmulator.UncheckedState.InnerColor = System.Drawing.Color.White;
+            this.tgAdvancedEmulator.CheckedChanged += new System.EventHandler(this.tgAdvancedEmulator_CheckedChanged);
+            // 
+            // label9
+            // 
+            this.label9.AutoSize = true;
+            this.label9.BackColor = System.Drawing.Color.Transparent;
+            this.label9.Font = new System.Drawing.Font("Orbitron", 15.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label9.ForeColor = System.Drawing.Color.White;
+            this.label9.Location = new System.Drawing.Point(8, 115);
+            this.label9.Name = "label9";
+            this.label9.Size = new System.Drawing.Size(249, 50);
+            this.label9.TabIndex = 23;
+            this.label9.Text = "Advanced Emulator\r\nGame Mod";
+            this.label9.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.label9.Click += new System.EventHandler(this.label9_Click);
+            // 
             // tgBgApps
             // 
             this.tgBgApps.CheckedState.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(94)))), ((int)(((byte)(148)))), ((int)(((byte)(255)))));
             this.tgBgApps.CheckedState.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(94)))), ((int)(((byte)(148)))), ((int)(((byte)(255)))));
             this.tgBgApps.CheckedState.InnerBorderColor = System.Drawing.Color.White;
             this.tgBgApps.CheckedState.InnerColor = System.Drawing.Color.White;
-            this.tgBgApps.Location = new System.Drawing.Point(302, 178);
+            this.tgBgApps.Location = new System.Drawing.Point(302, 188);
             this.tgBgApps.Name = "tgBgApps";
             this.tgBgApps.Size = new System.Drawing.Size(35, 20);
             this.tgBgApps.TabIndex = 22;
@@ -1259,12 +1294,13 @@ namespace Optimizer
             this.label8.BackColor = System.Drawing.Color.Transparent;
             this.label8.Font = new System.Drawing.Font("Orbitron", 15.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label8.ForeColor = System.Drawing.Color.White;
-            this.label8.Location = new System.Drawing.Point(10, 161);
+            this.label8.Location = new System.Drawing.Point(10, 164);
             this.label8.Name = "label8";
             this.label8.Size = new System.Drawing.Size(248, 57);
             this.label8.TabIndex = 21;
             this.label8.Text = "Disable Background Apps While Gaming";
             this.label8.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.label8.Click += new System.EventHandler(this.label8_Click);
             // 
             // label6
             // 
@@ -1284,7 +1320,7 @@ namespace Optimizer
             this.lblGameModeStatus.BackColor = System.Drawing.Color.Transparent;
             this.lblGameModeStatus.Font = new System.Drawing.Font("Orbitron", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblGameModeStatus.ForeColor = System.Drawing.Color.White;
-            this.lblGameModeStatus.Location = new System.Drawing.Point(9, 216);
+            this.lblGameModeStatus.Location = new System.Drawing.Point(9, 219);
             this.lblGameModeStatus.Name = "lblGameModeStatus";
             this.lblGameModeStatus.Size = new System.Drawing.Size(329, 44);
             this.lblGameModeStatus.TabIndex = 20;
@@ -1307,7 +1343,7 @@ namespace Optimizer
             this.tgAdvancedGame.CheckedState.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(94)))), ((int)(((byte)(148)))), ((int)(((byte)(255)))));
             this.tgAdvancedGame.CheckedState.InnerBorderColor = System.Drawing.Color.White;
             this.tgAdvancedGame.CheckedState.InnerColor = System.Drawing.Color.White;
-            this.tgAdvancedGame.Location = new System.Drawing.Point(302, 120);
+            this.tgAdvancedGame.Location = new System.Drawing.Point(302, 92);
             this.tgAdvancedGame.Name = "tgAdvancedGame";
             this.tgAdvancedGame.Size = new System.Drawing.Size(35, 20);
             this.tgAdvancedGame.TabIndex = 16;
@@ -1323,7 +1359,7 @@ namespace Optimizer
             this.tgNormalGame.CheckedState.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(94)))), ((int)(((byte)(148)))), ((int)(((byte)(255)))));
             this.tgNormalGame.CheckedState.InnerBorderColor = System.Drawing.Color.White;
             this.tgNormalGame.CheckedState.InnerColor = System.Drawing.Color.White;
-            this.tgNormalGame.Location = new System.Drawing.Point(302, 74);
+            this.tgNormalGame.Location = new System.Drawing.Point(302, 62);
             this.tgNormalGame.Name = "tgNormalGame";
             this.tgNormalGame.Size = new System.Drawing.Size(35, 20);
             this.tgNormalGame.TabIndex = 19;
@@ -1339,7 +1375,7 @@ namespace Optimizer
             this.label4.BackColor = System.Drawing.Color.Transparent;
             this.label4.Font = new System.Drawing.Font("Orbitron", 15.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label4.ForeColor = System.Drawing.Color.White;
-            this.label4.Location = new System.Drawing.Point(8, 115);
+            this.label4.Location = new System.Drawing.Point(8, 87);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(248, 25);
             this.label4.TabIndex = 15;
@@ -1351,7 +1387,7 @@ namespace Optimizer
             this.label5.BackColor = System.Drawing.Color.Transparent;
             this.label5.Font = new System.Drawing.Font("Orbitron", 15.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label5.ForeColor = System.Drawing.Color.White;
-            this.label5.Location = new System.Drawing.Point(8, 69);
+            this.label5.Location = new System.Drawing.Point(8, 57);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(133, 25);
             this.label5.TabIndex = 18;
@@ -1787,12 +1823,12 @@ namespace Optimizer
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(26)))), ((int)(((byte)(26)))), ((int)(((byte)(34)))));
             this.ClientSize = new System.Drawing.Size(800, 403);
+            this.Controls.Add(this.gamemodpnl);
+            this.Controls.Add(this.boostpnl);
             this.Controls.Add(this.settingspnl);
             this.Controls.Add(this.Homepnl);
-            this.Controls.Add(this.boostpnl);
             this.Controls.Add(this.Cleanerpnl);
             this.Controls.Add(this.infopnl);
-            this.Controls.Add(this.gamemodpnl);
             this.Controls.Add(this.guna2Panel1);
             this.Controls.Add(this.guna2Separator1);
             this.Controls.Add(this.titel);
@@ -1947,6 +1983,8 @@ namespace Optimizer
         private Guna.UI2.WinForms.Guna2DragControl guna2DragControl6;
         private Guna.UI2.WinForms.Guna2DragControl guna2DragControl7;
         private Guna.UI2.WinForms.Guna2DragControl guna2DragControl8;
+        private Guna.UI2.WinForms.Guna2ToggleSwitch tgAdvancedEmulator;
+        private System.Windows.Forms.Label label9;
     }
 }
 
