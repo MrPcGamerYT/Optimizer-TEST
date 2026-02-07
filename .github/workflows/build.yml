@@ -66,22 +66,13 @@ jobs:
           /p:AssemblyVersion=$env:VERSION `
           /p:InformationalVersion=$env:VERSION
 
-    # 🔹 Build Installer
+    # 🔹 Build Installer (output to publish/)
     - name: Build Installer
       uses: Minionguyjpro/Inno-Setup-Action@v1.2.2
       with:
         path: installer.iss
 
-    # 🔹 Locate Installer dynamically
-    - name: Locate Installer
-      shell: pwsh
-      run: |
-        $installer = Get-ChildItem -Recurse -Filter "OptimizerSetup.exe" | Select-Object -First 1
-        if (-not $installer) { throw "OptimizerSetup.exe not found!" }
-        Write-Host "INSTALLER_PATH=$($installer.FullName)" >> $env:GITHUB_ENV
-        Write-Host "Found installer: $($installer.FullName)"
-
-    # 🔹 Commit update.json
+    # 🔹 Commit update.json changes
     - name: Commit update.json
       shell: pwsh
       run: |
@@ -97,7 +88,7 @@ jobs:
       with:
         tag_name: "v${{ env.VERSION }}"
         name: "Release OptimizerSetup v${{ env.VERSION }}"
-        files: ${{ env.INSTALLER_PATH }}
+        files: publish/OptimizerSetup.exe
         make_latest: true
         fail_on_unmatched_files: true
       env:
