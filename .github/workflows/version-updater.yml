@@ -35,20 +35,46 @@ jobs:
     - name: Update AssemblyInfo.cs
       shell: pwsh
       run: |
-        $assemblyPath = "Optimizer/Properties/AssemblyInfo.cs"
-        if (-not (Test-Path $assemblyPath)) { Write-Error "AssemblyInfo.cs not found!"; exit 1 }
+        $sc = @{
+            using System.Reflection;
+            using System.Runtime.CompilerServices;
+            using System.Runtime.InteropServices;
 
-        $version = 1.0.1
-        $content = Get-Content $assemblyPath -Raw
+            // General Information about an assembly is controlled through the following
+            // set of attributes. Change these attribute values to modify the information
+            // associated with an assembly.
+            [assembly: AssemblyTitle("Optimizer")]
+            [assembly: AssemblyDescription("System Optimizer Tool")]
+            [assembly: AssemblyConfiguration("")]
+            [assembly: AssemblyCompany("YoyTuber")]
+            [assembly: AssemblyProduct("Optimizer")]
+            [assembly: AssemblyCopyright("© 2026 Mr.Pc Gamer. All Rights Reserved.")]
+            [assembly: AssemblyTrademark("")]
+            [assembly: AssemblyCulture("")]
 
-        # Replace AssemblyVersion and AssemblyFileVersion lines
-        $content = $content -replace 'AssemblyVersion\(".*"\)', "AssemblyVersion(`"$version`")"
-        $content = $content -replace 'AssemblyFileVersion\(".*"\)', "AssemblyFileVersion(`"$version`")"
+            // Setting ComVisible to false makes the types in this assembly not visible
+            // to COM components.  If you need to access a type in this assembly from
+            // COM, set the ComVisible attribute to true on that type.
+            [assembly: ComVisible(false)]
 
-        # Save the updated AssemblyInfo.cs
-        $content | Set-Content $assemblyPath -Encoding UTF8
+            // The following GUID is for the ID of the typelib if this project is exposed to COM
+            [assembly: Guid("08e58f25-5dd2-42fe-833a-23ad7133b493")]
 
-        Write-Host "AssemblyInfo.cs updated to version $version"
+            // Version information for an assembly consists of the following four values:
+            //
+            //      Major Version
+            //      Minor Version
+            //      Build Number
+            //      Revision
+            //
+            [assembly: AssemblyVersion("1.0.1")]
+            [assembly: AssemblyFileVersion("1.0.1")]
+
+
+
+        } | Set-Content $assemblyPath -Encoding UTF8
+
+        Write-Host "AssemblyInfo.cs updated to version $sc"
 
     # 3️⃣ Commit changes
     - name: Commit updated AssemblyInfo.cs
