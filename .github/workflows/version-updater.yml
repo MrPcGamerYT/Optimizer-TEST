@@ -11,20 +11,20 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v4
 
-    - name: Increment Version and Update Project File
+    - name: Increment Version and Update Files
       shell: pwsh
       run: |
-        # Find the first .csproj file
-        $projectFile = (Get-ChildItem -Recurse -Filter "*.csproj" | Select-Object -First 1).FullName
+        # Path to AssemblyInfo.cs
+        $assemblyInfoPath = "$(Get-ChildItem -Recurse -Filter AssemblyInfo.cs | Select-Object -First 1).FullName"
 
-        # Read the project file content
-        $projectContent = Get-Content $projectFile -Raw
+        # Read current version from AssemblyInfo.cs
+        $assemblyContent = Get-Content $assemblyInfoPath
+        
+        # Extract current version from AssemblyVersion and AssemblyFileVersion
+        $assemblyVersionLine = $assemblyContent | Where-Object { $_ -match 'AssemblyVersion' }
+        $assemblyFileVersionLine = $assemblyContent | Where-Object { $_ -match 'AssemblyFileVersion' }
 
-        # Extract the current version
-        $versionPattern = '<Version>(.*?)</Version>'
-        $currentVersion = [regex]::Match($projectContent, $versionPattern).Groups[1].Value
-
-        # Split current version into components
+        $currentVersion = ($assemblyVersionLine -split '"')[1]
         $versionParts = $currentVersion.Split('.')
         $major = [int]$versionParts[0]
         $minor = [int]$versionParts[1]
@@ -34,11 +34,14 @@ jobs:
         # Construct new version
         $newVersion = "$major.$minor.$build.$revision"
 
-        # Update the version in the project file
-        $updatedContent = $projectContent -replace $versionPattern, "<Version>$newVersion</Version>"
+        # Update AssemblyVersion and AssemblyFileVersion in AssemblyInfo.cs
+        $updatedAssemblyContent = $assemblyContent | ForEach-Object {
+          $_ -replace 'AssemblyVersion\(".*"\)', "AssemblyVersion(`"$newVersion`")"
+          $_ -replace 'AssemblyFileVersion\(".*"\)', "AssemblyFileVersion(`"$newVersion`")"
+        }
 
-        # Write the updated content back to the project file
-        $updatedContent | Set-Content -Path $projectFile -Encoding utf8
+        # Write the updated content back to AssemblyInfo.cs
+        $updatedAssemblyContent | Set-Content -Path $assemblyInfoPath -Encoding utf8
 
         # Update updater.json with the new version
         $json = @{
@@ -53,6 +56,6 @@ jobs:
       run: |
         git config user.name "github-actions"
         git config user.email "github-actions@github.com"
-        git add $projectFile update.json
+        git add $assemblyInfoPath update.json
         git commit -m "Increment version to $newVersion"
         git push
