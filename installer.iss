@@ -1,6 +1,6 @@
 [Setup]
 AppName=Optimizer
-AppVerName=Optimizer 1.0.0          ; <-- workflow will replace dynamically
+AppVersion=1.0.0
 DefaultDirName={autopf}\Optimizer
 DefaultGroupName=Optimizer
 UninstallDisplayIcon={app}\Optimizer.exe
@@ -14,7 +14,7 @@ AppPublisher=Mr.Pc Gamer
 AppPublisherURL=https://github.com/MrPcGamerYT/Optimizer
 VersionInfoCompany=Mr.Pc Gamer
 VersionInfoDescription=Optimizer System Setup
-VersionInfoVersion=1.0.0.0          ; <-- workflow will replace dynamically
+VersionInfoVersion=1.0.0.0
 VersionInfoCopyright=© 2026 Mr.Pc Gamer. All Rights Reserved.
 
 ; --- ADMIN RIGHTS ---
