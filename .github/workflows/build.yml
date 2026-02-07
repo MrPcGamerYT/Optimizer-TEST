@@ -1,4 +1,4 @@
-name: Build and Release v2
+name: Build and Release v1
 
 on:
   push:
@@ -12,19 +12,19 @@ jobs:
       contents: write
 
     steps:
-    # 1️⃣ Checkout code
+    # 🔹 Checkout Code
     - name: Checkout Code
       uses: actions/checkout@v4
 
-    # 2️⃣ Setup MSBuild
+    # 🔹 Setup MSBuild
     - name: Setup MSBuild
       uses: microsoft/setup-msbuild@v2
 
-    # 3️⃣ Setup NuGet
+    # 🔹 Setup NuGet
     - name: Setup NuGet
       uses: NuGet/setup-nuget@v1
 
-    # 4️⃣ Calculate version
+    # 🔹 Calculate Version
     - name: Calculate Version
       id: version
       shell: pwsh
@@ -38,77 +38,52 @@ jobs:
         Write-Host "VERSION=$version" >> $env:GITHUB_ENV
         Write-Host "Calculated version: $version"
 
-    # 5️⃣ Update csproj version (FileVersion, AssemblyVersion, Version)
+    # 🔹 Update csproj Version
     - name: Update csproj Version
       shell: pwsh
       run: |
         $projectFile = Get-ChildItem -Recurse -Filter "*.csproj" | Select-Object -First 1 -ExpandProperty FullName
         (Get-Content $projectFile) `
-          -replace '<AssemblyVersion>.*</AssemblyVersion>', "<AssemblyVersion>$env:VERSION</AssemblyVersion>" `
           -replace '<FileVersion>.*</FileVersion>', "<FileVersion>$env:VERSION</FileVersion>" `
           -replace '<Version>.*</Version>', "<Version>$env:VERSION</Version>" | Set-Content $projectFile
         Write-Host "Updated csproj to version $env:VERSION"
 
-    # 6️⃣ Update Inno Setup version
-    - name: Update Inno Setup Version
-      shell: pwsh
-      run: |
-        $issFile = "installer.iss"
-        $content = Get-Content $issFile
-
-        # Replace or add AppVerName
-        if ($content -match '^AppVerName=.*') {
-            $content = $content -replace '^AppVerName=.*', "AppVerName=Optimizer $env:VERSION"
-        } else {
-            $index = ($content | Select-String -Pattern '^\[Setup\]').LineNumber
-            $content = $content[0..($index-1)] + "AppVerName=Optimizer $env:VERSION" + $content[$index..($content.Length-1)]
-        }
-
-        # Replace or add VersionInfoVersion
-        if ($content -match '^VersionInfoVersion=.*') {
-            $content = $content -replace '^VersionInfoVersion=.*', "VersionInfoVersion=$env:VERSION"
-        } else {
-            $content += "`nVersionInfoVersion=$env:VERSION"
-        }
-
-        $content | Set-Content $issFile -Encoding UTF8
-        Write-Host "Updated installer version to $env:VERSION"
-
-    # 7️⃣ Build project
+    # 🔹 Build Project
     - name: Build Project
       shell: pwsh
       run: |
         $projectFile = Get-ChildItem -Recurse -Filter "*.csproj" | Select-Object -First 1 -ExpandProperty FullName
         nuget restore "$projectFile"
-        msbuild "$projectFile" /p:Configuration=Release /p:Platform="Any CPU" /p:OutputPath="${{ github.workspace }}\publish\" /p:AssemblyVersion=$env:VERSION /p:FileVersion=$env:VERSION
+        msbuild "$projectFile" /p:Configuration=Release /p:Platform="Any CPU" /p:OutputPath="${{ github.workspace }}\publish\"
 
-    # 8️⃣ Build installer
+    # 🔹 Build Installer
     - name: Build Installer
       uses: Minionguyjpro/Inno-Setup-Action@v1.2.2
       with:
         path: installer.iss
 
-    # 9️⃣ Copy installer to workspace root
-    - name: Copy Installer for Release
+    # 🔹 Find Installer Output
+    - name: Find Installer
+      id: find_installer
       shell: pwsh
       run: |
         $installer = Get-ChildItem -Recurse -Filter OptimizerSetup.exe | Select-Object -First 1
         if (-not $installer) { throw "OptimizerSetup.exe not found!" }
-        Copy-Item $installer.FullName "${{ github.workspace }}/OptimizerSetup.exe" -Force
-        Write-Host "INSTALLER_PATH=OptimizerSetup.exe" >> $env:GITHUB_ENV
+        Write-Host "INSTALLER_PATH=$($installer.FullName)" >> $env:GITHUB_ENV
+        Write-Host "Installer found at $($installer.FullName)"
 
-    # 🔟 Generate update.json
+    # 🔹 Generate update.json
     - name: Generate update.json
       shell: pwsh
       run: |
         $json = @{
             version = "$env:VERSION"
-            url     = "https://github.com/${{ github.repository }}/releases/latest/download/OptimizerSetup.exe"
+            url     = "https://github.com/MrPcGamerYT/Optimizer/releases/latest/download/OptimizerSetup.exe"
         } | ConvertTo-Json -Compress
         $json | Set-Content -Path update.json -Encoding UTF8
         Write-Host "Generated update.json: $json"
 
-    # 1️⃣1️⃣ Commit update.json
+    # 🔹 Commit update.json
     - name: Commit update.json
       shell: pwsh
       run: |
@@ -118,19 +93,19 @@ jobs:
         git commit -m "Auto update update.json to $env:VERSION" || echo "No changes to commit"
         git push
 
-    # 1️⃣2️⃣ Create GitHub release
+    # 🚀 Create GitHub Release
     - name: Create Release
       uses: softprops/action-gh-release@v2
       with:
-        tag_name: "v${{ env.VERSION }}"
+        tag_name: "v${{ env.VERSION }}"                 # Use version as tag
         name: "Release v${{ env.VERSION }}"
-        files: "OptimizerSetup.exe"
+        files: "${{ env.INSTALLER_PATH }}"             # Dynamic installer path
         make_latest: true
         fail_on_unmatched_files: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    # 1️⃣3️⃣ Delete old releases
+    # 🧹 Delete old releases (keep latest)
     - name: Delete old releases
       shell: pwsh
       env:
@@ -139,6 +114,9 @@ jobs:
         $tags = gh release list --json tagName,createdAt --jq 'sort_by(.createdAt) | reverse | .[1:] | .[].tagName'
         if ($tags) {
           foreach ($tag in $tags) {
+            Write-Host "Deleting release: $tag"
             gh release delete $tag -y --cleanup-tag
           }
+        } else {
+          Write-Host "No old releases to delete."
         }
