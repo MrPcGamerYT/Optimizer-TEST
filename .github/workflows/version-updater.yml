@@ -1,0 +1,80 @@
+name: Update Project Version
+
+on:
+  workflow_dispatch:   # Manual trigger
+
+jobs:
+  update-version:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    # 1️⃣ Read updater.json version
+    - name: Read version from updater.json
+      shell: pwsh
+      run: |
+        $jsonPath = "update.json"
+        if (-not (Test-Path $jsonPath)) { Write-Error "update.json not found!"; exit 1 }
+        $json = Get-Content $jsonPath | ConvertFrom-Json
+        $version = $json.version
+        if ([string]::IsNullOrWhiteSpace($version)) { Write-Error "Version is empty!"; exit 1 }
+        Write-Host "APP_VERSION=$version" >> $env:GITHUB_ENV
+
+    # 2️⃣ Update AssemblyInfo.cs
+    - name: Update AssemblyInfo.cs
+      shell: pwsh
+      run: |
+        $version = $env:APP_VERSION
+        $assemblyPath = "Optimizer/Properties/AssemblyInfo.cs"
+
+        $content = @"
+        using System.Reflection;
+        using System.Runtime.CompilerServices;
+        using System.Runtime.InteropServices;
+
+        [assembly: AssemblyTitle("Optimizer")]
+        [assembly: AssemblyDescription("System Optimizer Tool")]
+        [assembly: AssemblyConfiguration("")]
+        [assembly: AssemblyCompany("YoyTuber")]
+        [assembly: AssemblyProduct("Optimizer")]
+        [assembly: AssemblyCopyright("© 2026 Mr.Pc Gamer. All Rights Reserved.")]
+        [assembly: AssemblyTrademark("")]
+        [assembly: AssemblyCulture("")]
+        [assembly: ComVisible(false)]
+        [assembly: Guid("08e58f25-5dd2-42fe-833a-23ad7133b493")]
+        [assembly: AssemblyVersion("$version")]
+        [assembly: AssemblyFileVersion("$version")]
+        "@
+
+        $content | Set-Content $assemblyPath -Encoding UTF8
+        Write-Host "AssemblyInfo.cs updated to version $version"
+
+    # 3️⃣ Update .csproj version
+    - name: Update csproj version
+      shell: pwsh
+      run: |
+        $projectFile = Get-ChildItem -Recurse -Filter "*.csproj" | Select-Object -First 1 -ExpandProperty FullName
+        [xml]$csproj = Get-Content $projectFile
+
+        if (-not $csproj.Project.PropertyGroup.Version) {
+          $node = $csproj.CreateElement("Version")
+          $csproj.Project.PropertyGroup.AppendChild($node) | Out-Null
+        }
+        $csproj.Project.PropertyGroup.Version = $env:APP_VERSION
+        $csproj.Save($projectFile)
+        Write-Host "$projectFile version updated to $env:APP_VERSION"
+
+    # 4️⃣ Commit changes
+    - name: Commit updated files
+      shell: pwsh
+      run: |
+        git config user.name "github-actions"
+        git config user.email "github-actions@github.com"
+        git add Optimizer/Properties/AssemblyInfo.cs
+        git add *.csproj
+        git commit -m "Update AssemblyInfo.cs and .csproj to version $env:APP_VERSION" || echo "No changes"
+        git push
