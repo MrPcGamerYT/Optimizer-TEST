@@ -10,8 +10,6 @@ class Updater
     private const string UpdateInfoUrl =
         "https://raw.githubusercontent.com/MrPcGamerYT/Optimizer/main/update.json";
 
-    private const string TempInstallerName = "OptimizerSetup.exe";
-
     public static void CheckAndUpdate()
     {
         try
@@ -24,43 +22,42 @@ class Updater
 
                 string json = wc.DownloadString(UpdateInfoUrl);
 
-                string latestVersion = ExtractJsonValue(json, "version");
+                string latestVersionText = ExtractJsonValue(json, "version");
                 string installerUrl = ExtractJsonValue(json, "url");
 
-                // Compare versions
-                if (CompareVersions(latestVersion, Application.ProductVersion) <= 0)
-                    return; // Up-to-date → do nothing
-
-                string installerPath = Path.Combine(Path.GetTempPath(), TempInstallerName);
-
-                // If installer already downloaded for this version, skip download
-                if (!File.Exists(installerPath) || !VerifyInstallerVersion(installerPath, latestVersion))
-                {
-                    // Remove old installer
-                    if (File.Exists(installerPath))
-                        File.Delete(installerPath);
-
-                    // Download new installer
-                    wc.DownloadFile(installerUrl, installerPath);
-                }
+                // Compare versions: if latest <= current, do nothing
+                if (CompareVersions(latestVersionText, Application.ProductVersion) <= 0)
+                    return; // already up-to-date
 
                 // Ask user to update
                 if (MessageBox.Show(
-                    $"A new version {latestVersion} is available.\nDo you want to update now?",
+                    $"New version {latestVersionText} is available.\n\nUpdate now?",
                     "Optimizer Update",
                     MessageBoxButtons.YesNo,
                     MessageBoxIcon.Information) != DialogResult.Yes)
                     return;
 
-                // Run installer as admin
+                string installerPath = Path.Combine(
+                    Path.GetTempPath(),
+                    "OptimizerSetup.exe"
+                );
+
+                // Remove previous installer if exists
+                if (File.Exists(installerPath))
+                    File.Delete(installerPath);
+
+                // Download latest installer
+                wc.DownloadFile(installerUrl, installerPath);
+
+                // Run installer only (never the main exe)
                 Process.Start(new ProcessStartInfo
                 {
                     FileName = installerPath,
                     UseShellExecute = true,
-                    Verb = "runas"
+                    Verb = "runas" // prompt for admin
                 });
 
-                // Exit current app immediately
+                // Force exit the current app immediately
                 Environment.Exit(0);
             }
         }
@@ -75,42 +72,52 @@ class Updater
         }
     }
 
+    // Extract a JSON value by key (no external library required)
     private static string ExtractJsonValue(string json, string key)
     {
-        var match = Regex.Match(json, $"\"{key}\"\\s*:\\s*\"([^\"]+)\"", RegexOptions.IgnoreCase);
+        var match = Regex.Match(
+            json,
+            $"\"{key}\"\\s*:\\s*\"([^\"]+)\"",
+            RegexOptions.IgnoreCase
+        );
+
         if (!match.Success)
             throw new Exception($"Missing '{key}' in update.json");
+
         return match.Groups[1].Value;
     }
 
+    // Compare semantic versions: returns 1 if latest > current, -1 if latest < current, 0 if equal
     private static int CompareVersions(string vLatest, string vCurrent)
     {
-        int[] latestParts = ParseVersion(vLatest);
-        int[] currentParts = ParseVersion(vCurrent);
-        int maxLen = Math.Max(latestParts.Length, currentParts.Length);
-        for (int i = 0; i < maxLen; i++)
+        int[] latestParts = ParseVersionParts(vLatest);
+        int[] currentParts = ParseVersionParts(vCurrent);
+
+        int maxLength = Math.Max(latestParts.Length, currentParts.Length);
+
+        for (int i = 0; i < maxLength; i++)
         {
-            int latest = i < latestParts.Length ? latestParts[i] : 0;
-            int current = i < currentParts.Length ? currentParts[i] : 0;
+            int latest = (i < latestParts.Length) ? latestParts[i] : 0;
+            int current = (i < currentParts.Length) ? currentParts[i] : 0;
+
             if (latest > current) return 1;
             if (latest < current) return -1;
         }
-        return 0;
+
+        return 0; // equal
     }
 
-    private static int[] ParseVersion(string v)
+    private static int[] ParseVersionParts(string v)
     {
         var match = Regex.Match(v, @"\d+(\.\d+)*");
-        if (!match.Success) throw new Exception("Invalid version format: " + v);
-        string[] parts = match.Value.Split('.');
-        int[] nums = new int[parts.Length];
-        for (int i = 0; i < parts.Length; i++) nums[i] = int.Parse(parts[i]);
-        return nums;
-    }
+        if (!match.Success)
+            throw new Exception("Invalid version format: " + v);
 
-    // Optional: verify installer filename contains version (you can embed version in name if needed)
-    private static bool VerifyInstallerVersion(string path, string version)
-    {
-        return Path.GetFileNameWithoutExtension(path).Contains(version.Replace(".", "_"));
+        string[] parts = match.Value.Split('.');
+        int[] numbers = new int[parts.Length];
+        for (int i = 0; i < parts.Length; i++)
+            numbers[i] = int.Parse(parts[i]);
+
+        return numbers;
     }
 }
