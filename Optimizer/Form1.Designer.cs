@@ -1071,6 +1071,7 @@ namespace Optimizer
             this.btnBgApps.Size = new System.Drawing.Size(142, 34);
             this.btnBgApps.TabIndex = 10;
             this.btnBgApps.Text = "End Background Apps";
+            this.toolTip1.SetToolTip(this.btnBgApps, "Warning: It\'s Kill Your Background App");
             this.btnBgApps.Click += new System.EventHandler(this.btnBgApps_Click);
             // 
             // lblBoostStatus
@@ -1825,9 +1826,9 @@ namespace Optimizer
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(26)))), ((int)(((byte)(26)))), ((int)(((byte)(34)))));
             this.ClientSize = new System.Drawing.Size(800, 403);
+            this.Controls.Add(this.boostpnl);
             this.Controls.Add(this.Homepnl);
             this.Controls.Add(this.gamemodpnl);
-            this.Controls.Add(this.boostpnl);
             this.Controls.Add(this.settingspnl);
             this.Controls.Add(this.Cleanerpnl);
             this.Controls.Add(this.infopnl);
