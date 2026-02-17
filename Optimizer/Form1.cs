@@ -496,9 +496,100 @@ namespace Optimizer
     "residentEvil5","residentEvil6","residentEvil7","amnesia","soma","outlast",
     "outlast2","alienisolation","theevilwithin","theevilwithin2","layersoffear",
     "layersoffear2","blairwitch","littlehope","manofmedan","darkpicturesmanofmedan",
-    "darkpictureshouseofashes","darkpicturesthedevilinme","amnesiarebirth"
+    "darkpictureshouseofashes","darkpicturesthedevilinme","amnesiarebirth",
     
     // Total: ~200+ games, final chunk
+    // ===== Official Vanilla =====
+    "minecraft",
+    "minecraftlauncher",
+    "minecraft-launcher",
+    "MinecraftLauncher",
+    "MinecraftLauncher.exe",
+    "Minecraft.exe",
+    "Minecraft.Windows",
+    "Minecraft.Windows.exe",
+    "MinecraftWindows",
+    "Win10Minecraft",
+    "java",
+    "javaw",
+    "java.exe",
+    "javaw.exe",
+
+    // ===== Lunar Client =====
+    "lunarclient",
+    "lunarclient-prod",
+    "lunarclient-updater",
+    "Lunar Client.exe",
+    "LunarClient.exe",
+
+    // ===== Badlion Client =====
+    "badlionclient",
+    "badlionclient.exe",
+    "Badlion Client.exe",
+    "BadlionClient.exe",
+    "BAC",
+    "BAC.exe",
+    "badlionanticheat",
+
+    // ===== TLauncher =====
+    "tlauncher",
+    "tlauncher.exe",
+    "tlauncher-mcl",
+    "TLauncher.exe",
+
+    // ===== SKLauncher =====
+    "sklauncher",
+    "sklauncher.exe",
+    "SKlauncher.exe",
+
+    // ===== MultiMC / Prism / PolyMC =====
+    "multimc",
+    "MultiMC.exe",
+    "prismlauncher",
+    "PrismLauncher.exe",
+    "polymlauncher",
+    "PolyMC.exe",
+
+    // ===== GDLauncher =====
+    "gdlauncher",
+    "gdlauncher.exe",
+    "GDLauncher.exe",
+
+    // ===== CurseForge =====
+    "curseforge",
+    "curseforge.exe",
+    "CurseForge.exe",
+
+    // ===== Feather Client =====
+    "feather",
+    "featherclient",
+    "Feather.exe",
+
+    // ===== LabyMod =====
+    "labymod",
+    "labymodlauncher",
+    "LabyMod.exe",
+
+    // ===== ATLauncher =====
+    "atlauncher",
+    "ATLauncher.exe",
+
+    // ===== Technic Launcher =====
+    "technic",
+    "techniclauncher",
+    "TechnicLauncher.exe",
+
+    // ===== FTB =====
+    "ftbapp",
+    "ftblauncher",
+    "FTBApp.exe",
+
+    // ===== HMCL =====
+    "hmcl",
+    "hmcl.exe",
+    "HMCL.exe"
+
+    
 };
         // Fast + no-duplicate game list
         private HashSet<string> gameExecutablesSet;
